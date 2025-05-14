@@ -1,0 +1,10 @@
+{"patent_id": "10-2023-0006425", "section": "특허_기본정보", "subsection": "특허정보", "content": {"공개번호": "10-2024-0114381", "출원번호": "10-2023-0006425", "발명의 명칭": "번역 품질 선별을 위한 언어쌍 카테고리별 자연어 분류 인공지능 시스템 및 방법", "출원인": "김형철", "발명자": "김형철"}}
+{"patent_id": "10-2023-0006425", "section": "청구범위", "subsection": "청구항", "claim_number": "청구항_1", "content": "번역 품질 선별을 위한 언어쌍 카테고리별 자연어 분류 인공지능 시스템 및 방법"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "요약", "paragraph": 1, "content": "번역 품질 선별을 위한 언어쌍 카테고리별 자연어 분류 인공지능 시스템 및 방법"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "기술분야", "paragraph": 1, "content": "인공지능/소프트웨어"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "배경기술", "paragraph": 1, "content": "150만개 말뭉치데이터를 활용한 AI 기술평가 기반 전문번역가 매칭 APP 서비스"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "해결하려는과제", "paragraph": 1, "content": "AI 필터링을 통해 가장 정확하게 번역된 고수를 의뢰자에게 추천하는 시스템"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "과제의해결수단", "paragraph": 1, "content": "문장 embedding 후 고품질 번역 텍스트 선정"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "발명의효과", "paragraph": 1, "content": "대량의 한영 번역 데이터를 인공지능 알고리즘을 통해 평가하여 어떤 번역이 좋은 번역이 선별해주는 기술"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "발명을실시하기위한구체적인내용", "paragraph": 1, "content": "기계 번역/의역 데이터 embedding [실시예]"}
+{"patent_id": "10-2023-0006425", "section": "발명의_설명", "subsection": "발명을실시하기위한구체적인내용", "paragraph": 2, "content": "산업상 이용가능성 APP 개발"}
