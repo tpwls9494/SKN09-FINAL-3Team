@@ -18,7 +18,7 @@ login(token=HF_TOKEN)
 
 # ====== 데이터셋 repo 생성 ======
 create_repo(
-    repo_id=REPO_NAME,
+    repo_id=REPO_ID,
     token=HF_TOKEN,
     repo_type="dataset",
     private=IS_PRIVATE,
