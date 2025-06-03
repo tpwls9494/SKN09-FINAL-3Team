@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,3 +26,7 @@ urlpatterns = [
     path('user_admin/', include('user_admin.urls')),    # 관리자 페이지
     path('assist/', include('assist.urls')),  # AI 기능
 ]
+
+if settings.DEBUG:
+    from django.contrib.staticfiles.views import serve
+    urlpatterns += static(settings.STATIC_URL, view=serve)
