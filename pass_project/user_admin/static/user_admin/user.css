@@ -21,8 +21,8 @@ html, body {
 
 /* ===== 헤더 영역 ===== */
 .header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: flex-end;
   background-color: #0d1b3d;
   color: white;
@@ -30,7 +30,7 @@ html, body {
 }
 
 h1 {
-  flex-grow: 1;
+  grid-column: 2;
   text-align: center;
   margin: 0;
   font-size: 24px;
@@ -51,12 +51,12 @@ h1 {
   height: 30px;
 }
 
-
 .tab-nav {
   display: flex;
-  align-items: flex-end;
-  margin-bottom: -1px;
+  gap: 0px;
+  justify-content: flex-end; /* 오른쪽 정렬 */
 }
+
 
 /* ===== 탭 버튼 ===== */
 .tab {

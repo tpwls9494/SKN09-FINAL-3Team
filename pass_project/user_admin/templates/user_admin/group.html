@@ -1,71 +1,61 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-{% load static %}
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="{% static 'user_admin/group.css' %}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Group 관리자 페이지</title>
+  <link rel="stylesheet" href="{% static 'user_admin/group.css' %}" />
 </head>
 <body>
   <div class="wrapper">
-    <header class="header">
+    <div class="header">
       <div class="logo">
         <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo">
         <span>PASS</span>
       </div>
       <h1>관리자 페이지</h1>
-      <nav class="tab-nav">
+      <div class="tab-nav">
         <button class="tab active">Group</button>
-        <button class="tab">User</button>
-      </nav>
-    </header>
+        <button class="tab" onclick="location.href='user.html'">User</button>
+      </div>
+    </div>
 
     <main class="main-container">
       <section class="user-list-section">
         <h2>그룹 목록</h2>
         <ul class="user-list">
-          <li>R&D <span>
-            <img src="{% static 'user_admin/img/pluse.png' %}" alt="추가">
-            <img src="{% static 'user_admin/img/stop.png' %}" alt="정지">
-          </span></li>
-          <li>QA <span>
-            <img src="{% static 'user_admin/img/pluse.png' %}" alt="추가">
-            <img src="{% static 'user_admin/img/stop.png' %}" alt="정지">
-          </span></li>
-          <li>AI Research <span>
-            <img src="{% static 'user_admin/img/pluse.png' %}" alt="추가">
-            <img src="{% static 'user_admin/img/stop.png' %}" alt="정지">
-          </span></li>
-          <li>group4 <span>
-            <img src="{% static 'user_admin/img/pluse.png' %}" alt="추가">
-            <img src="{% static 'user_admin/img/stop.png' %}" alt="정지">
-          </span></li>
+          {% for group in groups %}
+          <li>
+            {{ group }}
+            <span>
+              <img src="{% static 'user_admin/img/pluse.png' %}" alt="추가" />
+              <img src="{% static 'user_admin/img/stop.png' %}" alt="정지" />
+            </span>
+          </li>
+          {% endfor %}
         </ul>
         <button class="add-user">+ 그룹 생성</button>
       </section>
 
       <section class="log-section">
         <h2>그룹 내 사용자</h2>
-
-        <div class="group-box">
-          <div class="group-header">R&D</div>
-          <ul class="group-user-list">
-            <li><span class="status pink"></span><span class="username">user1</span><img src="{% static 'user_admin/img/delete.png' %}" alt="삭제"></li>
-            <li><span class="status pink"></span><span class="username">user4</span><img src="{% static 'user_admin/img/delete.png' %}" alt="삭제"></li>
+        {% for group in groups %}
+        <div class="group-box {% if forloop.first %}expanded{% endif %}">
+          <div class="group-header" onclick="toggleGroup(this)">
+            <span>{{ group }}</span>
+            <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
+          </div>
+          <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
+            <li><span class="status pink"></span><span class="username">사용자1</span></li>
+            <li><span class="status gray"></span><span class="username">사용자2</span></li>
           </ul>
         </div>
-
-        <div class="accordion">
-          <button class="accordion-button">QA <img src="{% static 'user_admin/img/more.png' %}" alt="펼치기"></button>
-          <button class="accordion-button">AI Research <img src="{% static 'user_admin/img/more.png' %}" alt="펼치기"></button>
-          <button class="accordion-button">group4 <img src="{% static 'user_admin/img/more.png' %}" alt="펼치기"></button>
-        </div>
-
+        {% endfor %}
       </section>
     </main>
-
-    <script src="{% static 'user_admin/group.js' %}"></script>
   </div>
+
+  <script src="{% static 'user_admin/group.js' %}"></script>
 </body>
 </html>
