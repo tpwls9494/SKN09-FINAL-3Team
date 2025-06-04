@@ -63,8 +63,8 @@ ROOT_URLCONF = 'pass_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # 템플릿 디렉토리 경로
-        'APP_DIRS': True,
+        'DIRS': [BASE_DIR / 'templates'],  # 최상위 templates 폴더
+        'APP_DIRS': True,                  # 각 앱의 “templates/앱이름/”도 자동 탐색
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -128,7 +128,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-# STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
