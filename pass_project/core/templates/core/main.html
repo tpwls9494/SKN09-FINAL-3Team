@@ -14,12 +14,13 @@
       <span>PASS</span>
     </div>
     <nav>
-      <a href="#" onclick="goToAIassistpage()">AI assist</a>
+      <a href="#" onclick="goToAIassistpage(); return false;">AI assist</a>
       <a href="#" onclick="goToAIqapage(); return false;">AI Q&A</a>
-      <a href="#" onclick="goToLoginpage()">로그인</a>
+      <a href="{% url 'accounts:login' %}">로그인</a>
     </nav>
   </header>
 
+  
   <!-- 1) 첫 화면: background.jpg -->
   <main class="hero">
     {% comment %} 
