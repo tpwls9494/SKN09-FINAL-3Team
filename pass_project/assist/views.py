@@ -15,82 +15,82 @@ def mock_ai_edit(draft_text, prompt):
 def mock_ai_evaluate(draft_text):
     return "🧠 AI 평가 결과: 이 초안은 기술적 진보성이 우수합니다."
 
-def mock_ai_generate_draft(template_data):
-    """템플릿 데이터를 기반으로 마크다운 초안 생성"""
-    tech_name = template_data.get('tech_name', '혁신적인 기술 시스템')
+# def mock_ai_generate_draft(template_data):
+#     """템플릿 데이터를 기반으로 마크다운 초안 생성"""
+#     tech_name = template_data.get('tech_name', '혁신적인 기술 시스템')
     
-    draft_content = f"""# 발명의 명칭
-{tech_name}
+#     draft_content = f"""# 발명의 명칭
+# {tech_name}
 
-## 기술분야
-{template_data.get('tech_description', '')}
+# ## 기술분야
+# {template_data.get('tech_description', '')}
 
-## 배경기술
-{template_data.get('problem_solved', '')}
+# ## 배경기술
+# {template_data.get('problem_solved', '')}
 
-기존 기술들은 다양한 한계점을 가지고 있었습니다. 특히 효율성, 정확성, 경제성 측면에서 개선이 필요한 상황이었으며, 이러한 문제점들을 해결하기 위한 혁신적인 접근 방법이 요구되었습니다.
+# 기존 기술들은 다양한 한계점을 가지고 있었습니다. 특히 효율성, 정확성, 경제성 측면에서 개선이 필요한 상황이었으며, 이러한 문제점들을 해결하기 위한 혁신적인 접근 방법이 요구되었습니다.
 
-## 해결하려는 과제
-{template_data.get('problem_solved', '')}
+# ## 해결하려는 과제
+# {template_data.get('problem_solved', '')}
 
-본 발명은 **{tech_name}**을 통해 기존 기술의 한계를 극복하고, 더 나은 솔루션을 제공하는 것을 주요 목표로 합니다.
+# 본 발명은 **{tech_name}**을 통해 기존 기술의 한계를 극복하고, 더 나은 솔루션을 제공하는 것을 주요 목표로 합니다.
 
-## 과제의 해결 수단
-{template_data.get('tech_differentiation', '')}
+# ## 과제의 해결 수단
+# {template_data.get('tech_differentiation', '')}
 
-본 발명은 다음과 같은 혁신적인 방법론을 통해 기존 문제를 해결합니다:
-- 체계적이고 효율적인 접근 방식
-- 사용자 중심의 설계 철학
-- 확장 가능한 아키텍처 구현
+# 본 발명은 다음과 같은 혁신적인 방법론을 통해 기존 문제를 해결합니다:
+# - 체계적이고 효율적인 접근 방식
+# - 사용자 중심의 설계 철학
+# - 확장 가능한 아키텍처 구현
 
-{f"## 활용 분야\n{template_data.get('application_field', '')}\n" if template_data.get('application_field') else ''}
+# {f"## 활용 분야\n{template_data.get('application_field', '')}\n" if template_data.get('application_field') else ''}
 
-## 발명의 효과
-본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
+# ## 발명의 효과
+# 본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
 
-- **성능 향상**: 기존 기술 대비 현저히 향상된 성능 및 효율성
-- **경제성 개선**: 비용 효율적인 솔루션 제공
-- **사용자 편의성**: 직관적이고 사용하기 쉬운 인터페이스
-- **확장성**: 다양한 분야에서의 실용적 활용 가능성
-- **안정성**: 기술적 안정성 및 신뢰성 확보
+# - **성능 향상**: 기존 기술 대비 현저히 향상된 성능 및 효율성
+# - **경제성 개선**: 비용 효율적인 솔루션 제공
+# - **사용자 편의성**: 직관적이고 사용하기 쉬운 인터페이스
+# - **확장성**: 다양한 분야에서의 실용적 활용 가능성
+# - **안정성**: 기술적 안정성 및 신뢰성 확보
 
-## 발명을 실시하기 위한 구체적인 내용
+# ## 발명을 실시하기 위한 구체적인 내용
 
-### 주요 구성 요소
-{template_data.get('components_functions', '')}
+# ### 주요 구성 요소
+# {template_data.get('components_functions', '')}
 
-### 구현 방식
-{template_data.get('implementation_example', '')}
+# ### 구현 방식
+# {template_data.get('implementation_example', '')}
 
-본 발명의 주요 구성 요소들이 유기적으로 연동하여 혁신적인 솔루션을 제공합니다.
+# 본 발명의 주요 구성 요소들이 유기적으로 연동하여 혁신적인 솔루션을 제공합니다.
 
-{f"### 도면의 간단한 설명\n{template_data.get('drawing_description', '')}\n" if template_data.get('drawing_description') else ''}
+# {f"### 도면의 간단한 설명\n{template_data.get('drawing_description', '')}\n" if template_data.get('drawing_description') else ''}
 
-## 특허청구범위
+# ## 특허청구범위
 
-**청구항 1**: {tech_name}에 있어서,
-상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
+# **청구항 1**: {tech_name}에 있어서,
+# 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
 
-**청구항 2**: 제1항에 있어서,
-{template_data.get('components_functions', '').split('.')[0] if template_data.get('components_functions') else '효율적인 데이터 처리 및 분석 기능'}을 추가로 포함하는 것을 특징으로 하는 시스템.
+# **청구항 2**: 제1항에 있어서,
+# {template_data.get('components_functions', '').split('.')[0] if template_data.get('components_functions') else '효율적인 데이터 처리 및 분석 기능'}을 추가로 포함하는 것을 특징으로 하는 시스템.
 
-**청구항 3**: 제1항 또는 제2항에 있어서,
-사용자 친화적인 인터페이스를 통해 직관적인 조작이 가능한 것을 특징으로 하는 시스템.
+# **청구항 3**: 제1항 또는 제2항에 있어서,
+# 사용자 친화적인 인터페이스를 통해 직관적인 조작이 가능한 것을 특징으로 하는 시스템.
 
-**청구항 4**: 제1항 내지 제3항 중 어느 한 항에 있어서,
-{template_data.get('tech_differentiation', '').split('.')[0] if template_data.get('tech_differentiation') else '보안 기능을 강화하여 안전한 시스템 운영을 보장'}하는 것을 특징으로 하는 시스템.
+# **청구항 4**: 제1항 내지 제3항 중 어느 한 항에 있어서,
+# {template_data.get('tech_differentiation', '').split('.')[0] if template_data.get('tech_differentiation') else '보안 기능을 강화하여 안전한 시스템 운영을 보장'}하는 것을 특징으로 하는 시스템.
 
----
+# ---
 
-### 출원인 및 발명자 정보
-- **출원인**: {template_data.get('application_info', '')}
-- **발명자**: {template_data.get('inventor_info', '')}
+# ### 출원인 및 발명자 정보
+# - **출원인**: {template_data.get('application_info', '')}
+# - **발명자**: {template_data.get('inventor_info', '')}
 
----
-*※ 본 특허청구범위는 특허법 제42조 제2~5항 및 시행규칙 제21조에 따라 작성되었습니다.*
-*※ 모든 기술적 내용은 모범명세서 가이드에 따라 체계적으로 기술되어 있습니다.*"""
+# ---
+# *※ 본 특허청구범위는 특허법 제42조 제2~5항 및 시행규칙 제21조에 따라 작성되었습니다.*
+# *※ 모든 기술적 내용은 모범명세서 가이드에 따라 체계적으로 기술되어 있습니다.*"""
 
-    return draft_content
+#     return draft_content
 
 def editor_view(request):
     if request.method == 'POST':
