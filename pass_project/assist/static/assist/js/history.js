@@ -49,8 +49,21 @@ App.history = {
   // 패널 토글
   togglePanel() {
     const historyPanel = document.getElementById('historyPanel');
+    const toggleBtn = document.getElementById('sideToggleBtn');
+    
     if (historyPanel) {
       historyPanel.classList.toggle('collapsed');
+      
+      // 패널 상태에 따라 이미지 변경
+      if (toggleBtn && window.STATIC_IMAGES) {
+        if (historyPanel.classList.contains('collapsed')) {
+          // 닫힌 상태 - sidebtn2 이미지 사용
+          toggleBtn.src = window.STATIC_IMAGES.sidebtn2;
+        } else {
+          // 열린 상태 - sidebtn1 이미지 사용
+          toggleBtn.src = window.STATIC_IMAGES.sidebtn1;
+        }
+      }
     }
   },
   
@@ -89,20 +102,20 @@ App.history = {
   // 히스토리 아이템 요소 생성
   createHistoryItemElement(group) {
     const itemDiv = document.createElement('div');
+    
     itemDiv.className = 'history-item';
     itemDiv.innerHTML = `
       <div class="history-item-header" onclick="App.history.toggleItem(this)">
         <span class="item-title editable" onclick="App.history.editTitle(event, this)">${group.title}</span>
         <div class="item-actions">
-          <button class="action-btn edit-btn" onclick="App.history.editItem(event, this, ${group.id})" title="수정">✏️</button>
-          <button class="action-btn delete-btn" onclick="App.history.deleteItem(event, this, ${group.id})" title="삭제">🗑️</button>
+          <button class="action-btn edit-btn" onclick="App.history.editItem(event, this, ${group.id})" title="수정">${getEditIcon()}</button>
+          <button class="action-btn delete-btn" onclick="App.history.deleteItem(event, this, ${group.id})" title="삭제">${getDeleteIcon()}</button>
           <button class="toggle-btn">${group.expanded ? '▼' : '▶'}</button>
         </div>
       </div>
       <div class="history-item-content ${group.expanded ? '' : 'collapsed'}">
         ${group.items.map(item => `
           <div class="sub-item" onclick="App.history.loadItem(this, ${item.id})">
-            <span class="sub-icon">📄</span>
             <span>${item.title}</span>
           </div>
         `).join('')}
@@ -124,7 +137,6 @@ App.history = {
       <div class="team-content ${team.expanded ? '' : 'collapsed'}">
         ${team.items.map(item => `
           <div class="team-item" onclick="App.history.viewTeamItem(this, ${item.id})">
-            <span class="team-icon">👥</span>
             <span>${item.title}</span>
           </div>
         `).join('')}

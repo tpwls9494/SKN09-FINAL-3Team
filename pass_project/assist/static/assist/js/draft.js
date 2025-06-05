@@ -36,7 +36,7 @@ App.draft = {
       if (editButtons) editButtons.style.display = 'none';
     }
     
-    App.utils.showNotification('📄 특허 명세서 초안이 마크다운 형식으로 생성되었습니다.');
+    App.utils.showNotification('특허 명세서 초안이 마크다운 형식으로 생성되었습니다.');
   },
   
   // 저장 기능
@@ -59,7 +59,7 @@ App.draft = {
       String(now.getHours()).padStart(2, '0') + ':' + 
       String(now.getMinutes()).padStart(2, '0');
     
-    App.utils.showNotification(`💾 특허명세서_${timestamp}로 저장되었습니다.`);
+    App.utils.showNotification(`특허명세서_${timestamp}로 저장되었습니다.`);
   },
   
   // 직접 수정 모드 활성화
@@ -88,7 +88,7 @@ App.draft = {
       editButtons.style.display = 'flex';
       
       textarea.focus();
-      App.utils.showNotification('✏️ 수정 모드가 활성화되었습니다. 자유롭게 편집하세요.');
+      App.utils.showNotification('수정 모드가 활성화되었습니다. 자유롭게 편집하세요.');
     }
   },
   
@@ -116,7 +116,7 @@ App.draft = {
       editButtons.style.display = 'none';
       normalButtons.style.display = 'flex';
       
-      App.utils.showNotification('🔄 수정이 취소되었습니다.');
+      App.utils.showNotification('수정이 취소되었습니다.');
     }
   },
   
@@ -147,7 +147,7 @@ App.draft = {
       editButtons.style.display = 'none';
       normalButtons.style.display = 'flex';
       
-      App.utils.showNotification('✅ 수정이 완료되었습니다.');
+      App.utils.showNotification('수정이 완료되었습니다.');
     }
   },
   

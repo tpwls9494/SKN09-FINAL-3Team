@@ -10,7 +10,7 @@
 
 .history-panel.collapsed {
   width: 20px;
-  background-color: #1a237e;
+  background-color: #0F1E46;
 }
 
 .history-panel:not(.collapsed) {
@@ -58,7 +58,7 @@
 
 .history-panel:not(.collapsed) .history-icon {
   transform: rotate(180deg);
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .history-content {
@@ -93,7 +93,7 @@
 .section-header h4 {
   font-size: 14px;
   font-weight: 600;
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .refresh-btn {
@@ -109,7 +109,7 @@
 
 .refresh-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .history-items {
@@ -180,7 +180,7 @@
 
 .action-btn:hover {
   background-color: rgba(26, 35, 126, 0.1);
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .toggle-btn {
@@ -194,7 +194,7 @@
 }
 
 .toggle-btn:hover {
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .history-item-content {
@@ -225,12 +225,12 @@
 
 .sub-item:hover {
   background-color: #e3f2fd;
-  border-color: #1a237e;
+  border-color: #0F1E46;
 }
 
 .sub-icon {
   font-size: 12px;
-  color: #1a237e;
+  color: #0F1E46;
 }
 
 .new-template-section {
@@ -242,7 +242,7 @@
 .new-template-btn {
   width: 100%;
   padding: 12px 16px;
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: white;
   border: none;
   border-radius: 8px;
@@ -392,7 +392,7 @@
 }
 
 .section-number {
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: white;
   font-size: 16px;
   font-weight: bold;
@@ -485,7 +485,7 @@
 }
 
 .markdown-content h1 {
-  color: #1a237e;
+  color: #0F1E46;
   font-size: 24px;
   margin-bottom: 15px;
   border-bottom: 2px solid #e0e0e0;
@@ -529,7 +529,7 @@
 }
 
 .markdown-content strong {
-  color: #1a237e;
+  color: #0F1E46;
   font-weight: 600;
 }
 
@@ -635,7 +635,7 @@
 }
 
 .evaluation-section h4 {
-  color: #1a237e;
+  color: #0F1E46;
   margin-bottom: 10px;
   font-size: 16px;
   font-weight: 600;
@@ -643,7 +643,7 @@
 
 .evaluation-section .score {
   display: inline-block;
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: white;
   padding: 5px 15px;
   border-radius: 15px;
@@ -914,7 +914,7 @@
   }
 
   .format-option:hover {
-    border-color: #1a237e;
+    border-color: #0F1E46;
     background-color: #f8f9ff;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(26, 35, 126, 0.1);
@@ -931,7 +931,7 @@
   }
 
   .format-option:has(input[type="radio"]:checked) {
-    border-color: #1a237e;
+    border-color: #0F1E46;
     background-color: #f0f2ff;
     box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
   }
@@ -971,8 +971,8 @@
   }
 
   .modal-footer .btn-primary {
-    background-color: #1a237e;
-    border: 1px solid #1a237e;
+    background-color: #0F1E46;
+    border: 1px solid #0F1E46;
   }
 
   /* 반응형 */
@@ -999,6 +999,239 @@
       font-size: 24px;
       margin-bottom: 0;
       margin-right: 12px;
+    }
+  }
+  /* 출원인 정보 컨테이너 */
+  .applicant-info-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+  }
+
+  .applicant-type-section {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 20px;
+  }
+
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+  }
+
+  .radio-option:hover {
+    background-color: rgba(15, 30, 70, 0.05);
+  }
+
+  .radio-option input[type="radio"] {
+    margin: 0;
+    accent-color: #0F1E46;
+  }
+
+  .radio-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  /* 출원인 상세 정보 */
+  .applicant-details {
+    padding: 20px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+  }
+
+  .info-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .info-row label {
+    min-width: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    flex-shrink: 0;
+  }
+
+  .info-row .text-input,
+  .info-row .select-wrapper {
+    flex: 1;
+  }
+
+  /* 발명자 컨테이너 */
+  .inventors-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .inventor-item {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .inventor-header {
+    background-color: #f8f9fa;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .inventor-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0F1E46;
+  }
+
+  .remove-inventor-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: none; /* 첫 번째 발명자는 제거 불가 */
+  }
+
+  .inventor-item:not([data-inventor="1"]) .remove-inventor-btn {
+    display: inline-block;
+  }
+
+  .remove-inventor-btn:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #a71e2a;
+  }
+
+  .remove-icon {
+    font-weight: bold;
+  }
+
+  .inventor-info {
+    padding: 20px;
+  }
+
+  /* 발명자 추가 섹션 */
+  .add-inventor-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    margin-top: 10px;
+  }
+
+  .btn-add-inventor {
+    background-color: #0F1E46;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-add-inventor:hover {
+    background-color: #0d47a1;
+    transform: translateY(-1px);
+  }
+
+  .add-icon {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .inventor-note {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+  }
+
+  /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    .radio-group {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .info-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .info-row label {
+      min-width: auto;
+    }
+    
+    .inventor-header {
+      padding: 10px 15px;
+    }
+    
+    .inventor-info {
+      padding: 15px;
+    }
+    
+    .add-inventor-section {
+      padding: 15px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .applicant-type-section {
+      padding: 12px 15px;
+    }
+    
+    .applicant-details {
+      padding: 15px;
+    }
+    
+    .radio-option {
+      padding: 6px 10px;
+    }
+    
+    .btn-add-inventor {
+      padding: 8px 16px;
+      font-size: 13px;
     }
   }
 }

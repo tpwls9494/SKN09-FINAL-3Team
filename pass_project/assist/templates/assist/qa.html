@@ -19,25 +19,19 @@
       <div class="qa-container">
         <!-- 초기 Q&A 화면 -->
         <div class="qa-initial" id="qaInitial">
-          <h1 class="qa-title">AI 특허 Q&A</h1>
-          <p class="qa-subtitle">특허 관련 모든 궁금증을 해결해드립니다.</p>
+          <div>
+            <h1 class="qa-title">AI 특허 Q&A</h1>
+            <p class="qa-subtitle">특허 관련 모든 궁금증을 해결해드립니다.</p>
+          </div>
           
           <div class="qa-help-section">
             <div class="help-content">
               <h3>이런 질문을 해보세요!</h3>
               <div class="help-description">
-                <div class="question-item" onclick="App.qa.setQuestion(this.textContent)">
-                  특허 출원 절차와 필요 서류는 무엇인가요?
-                </div>
-                <div class="question-item" onclick="App.qa.setQuestion(this.textContent)">
-                  선출원주의는 어떤 적용원리는 무엇인가요?
-                </div>
-                <div class="question-item" onclick="App.qa.setQuestion(this.textContent)">
-                  특허권의 존속기간과 연장은 어떻게 되나요?
-                </div>
-                <div class="question-item" onclick="App.qa.setQuestion(this.textContent)">
-                  PCT 국제출원의 장점은 무엇인가요?
-                </div>
+                <div class="question-item" onclick="App.qa.setQuestion(this.textContent.replace('💡 ', ''))">특허 출원 절차와 필요 서류는 무엇인가요?</div>
+                <div class="question-item" onclick="App.qa.setQuestion(this.textContent.replace('💡 ', ''))">선출원주의는 어떤 적용원리는 무엇인가요?</div>
+                <div class="question-item" onclick="App.qa.setQuestion(this.textContent.replace('💡 ', ''))">특허권의 존속기간과 연장은 어떻게 되나요?</div>
+                <div class="question-item" onclick="App.qa.setQuestion(this.textContent.replace('💡 ', ''))">PCT 국제출원의 장점은 무엇인가요?</div>
               </div>
             </div>
           </div>
@@ -55,11 +49,11 @@
         <!-- 답변 화면 -->
         <div class="qa-response" id="qaResponse" style="display: none;">
           <div class="response-container">
-            <h2 class="response-title">질문에 대한 답변입니다.</h2>
+            <h2 class="response-title">답변</h2>
             
             <div class="qa-conversation">
               <div class="user-question-box" id="userQuestion">
-                <div class="question-icon">💡 질문 내용</div>
+                <div class="question-icon">질문 내용</div>
                 <div class="question-text">
                   <!-- 사용자 질문이 여기에 표시됩니다 -->
                 </div>

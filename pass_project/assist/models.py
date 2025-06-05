@@ -36,7 +36,6 @@ class Template(models.Model):
     def __str__(self):
         return self.template_title
 
-
 class Draft(models.Model):
     draft_id = models.AutoField(primary_key=True)
     template_id = models.ForeignKey(Template, on_delete=models.CASCADE)

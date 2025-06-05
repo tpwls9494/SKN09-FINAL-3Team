@@ -22,7 +22,7 @@
           <div class="optional">선택 사항</div>
         </div>
         <div class="input-help">기술명에 대하여 작성하세요.</div>
-        <input type="text" name="tech_name" class="text-input" placeholder="200자 이내로 작성하세요." maxlength="200">
+        <input type="text" name="tech_name" id="tech_name" class="text-input" placeholder="200자 이내로 작성하세요." maxlength="200">
         <div class="char-counter"><span class="current-count">0</span>/200</div>
       </div>
       
@@ -34,7 +34,7 @@
           <div class="required">* 필수 입력</div>
         </div>
         <div class="input-help">기술 설명에 대하여 작성하세요.</div>
-        <textarea name="tech_description" class="textarea-input" placeholder="3000자 이내로 작성하세요." required maxlength="3000"></textarea>
+        <textarea name="tech_description" id="tech_description" class="textarea-input" placeholder="3000자 이내로 작성하세요." required maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -46,7 +46,7 @@
           <div class="required">* 필수 입력</div>
         </div>
         <div class="input-help">해결 문제에 대하여 작성하세요.</div>
-        <textarea name="problem_solved" class="textarea-input" placeholder="기존 문제점과 해결 방법에 대하여 작성하세요." required maxlength="3000"></textarea>
+        <textarea name="problem_solved" id="problem_solved" class="textarea-input" placeholder="기존 문제점과 해결 방법에 대하여 작성하세요." required maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -58,7 +58,7 @@
           <div class="required">* 필수 입력</div>
         </div>
         <div class="input-help">기술의 차별성에 대하여 작성하세요.</div>
-        <textarea name="tech_differentiation" class="textarea-input" placeholder="기존 기술과의 차별점을 작성하세요." required maxlength="3000"></textarea>
+        <textarea name="tech_differentiation" id="tech_differentiation" class="textarea-input" placeholder="기존 기술과의 차별점을 작성하세요." required maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -70,7 +70,7 @@
           <div class="optional">선택 사항</div>
         </div>
         <div class="input-help">기술의 활용 분야에 대하여 작성하세요.</div>
-        <textarea name="application_field" class="textarea-input" placeholder="기술이 활용될 수 있는 분야를 작성하세요." maxlength="3000"></textarea>
+        <textarea name="application_field" id="application_field" class="textarea-input" placeholder="기술이 활용될 수 있는 분야를 작성하세요." maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -82,7 +82,7 @@
           <div class="required">* 필수 입력</div>
         </div>
         <div class="input-help">기술의 구성 요소 및 기능에 대하여 작성하세요.</div>
-        <textarea name="components_functions" class="textarea-input" placeholder="시스템의 주요 구성 요소와 기능을 작성하세요." required maxlength="3000"></textarea>
+        <textarea name="components_functions" id="components_functions" class="textarea-input" placeholder="시스템의 주요 구성 요소와 기능을 작성하세요." required maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -94,7 +94,7 @@
           <div class="required">* 필수 입력</div>
         </div>
         <div class="input-help">기술의 구현 방식 예를 작성하세요.</div>
-        <textarea name="implementation_example" class="textarea-input" placeholder="구체적인 구현 방식과 예시를 작성하세요." required maxlength="3000"></textarea>
+        <textarea name="implementation_example" id="implementation_example" class="textarea-input" placeholder="구체적인 구현 방식과 예시를 작성하세요." required maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -106,7 +106,7 @@
           <div class="optional">선택 사항</div>
         </div>
         <div class="input-help">도면에 대한 설명을 작성하세요.</div>
-        <textarea name="drawing_description" class="textarea-input" placeholder="도면에 대한 설명을 작성하세요." maxlength="3000"></textarea>
+        <textarea name="drawing_description" id="drawing_description" class="textarea-input" placeholder="도면에 대한 설명을 작성하세요." maxlength="3000"></textarea>
         <div class="char-counter"><span class="current-count">0</span>/3000</div>
       </div>
 
@@ -117,30 +117,76 @@
           <div class="section-title">출원인 정보 입력</div>
           <div class="required">* 필수 입력</div>
         </div>
-        <div class="input-help">출원인 정보를 작성하세요.</div>
+        <div class="input-help">특허 출원인의 정보를 정확히 작성하세요.</div>
         
-        <div class="person-info-container">
-          <div class="person-info-row">
-            <label>이름</label>
-            <input type="text" name="applicant_name" class="text-input" placeholder="출원인의 이름을 입력하세요." required maxlength="100">
-          </div>
-          
-          <div class="person-info-row">
-            <label>국적</label>
-            <div class="select-wrapper">
-              <select name="applicant_nationality" class="select-input" required>
-                <option value="대한민국">대한민국</option>
-                <option value="미국">미국</option>
-                <option value="일본">일본</option>
-                <option value="중국">중국</option>
-                <option value="기타">기타</option>
-              </select>
+        <div class="applicant-info-container">
+          <!-- 출원인 구분 -->
+          <div class="applicant-type-section">
+            <label class="section-label">출원인 구분</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="applicant_type" value="corporation" checked id="applicant_corp">
+                <span class="radio-text">법인</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="applicant_type" value="individual" id="applicant_ind">
+                <span class="radio-text">개인</span>
+              </label>
             </div>
           </div>
-          
-          <div class="person-info-row">
-            <label>주소</label>
-            <input type="text" name="applicant_address" class="text-input" placeholder="출원인의 주소를 입력하세요." required maxlength="200">
+
+          <!-- 법인 정보 -->
+          <div id="corporationInfo" class="applicant-details">
+            <div class="info-row">
+              <label>법인명</label>
+              <input type="text" name="corporation_name" id="corporation_name" class="text-input" placeholder="㈜회사명 또는 회사명 주식회사" maxlength="100">
+            </div>
+            <div class="info-row">
+              <label>대표자명</label>
+              <input type="text" name="representative_name" id="representative_name" class="text-input" placeholder="대표이사 홍길동" maxlength="50">
+            </div>
+            <div class="info-row">
+              <label>본점소재지</label>
+              <input type="text" name="corporation_address" id="corporation_address" class="text-input" placeholder="서울특별시 강남구 테헤란로 123, A빌딩 10층" maxlength="200">
+            </div>
+            <div class="info-row">
+              <label>국적</label>
+              <div class="select-wrapper">
+                <select name="corporation_nationality" id="corporation_nationality" class="select-input">
+                  <option value="대한민국">대한민국</option>
+                  <option value="미국">미국</option>
+                  <option value="일본">일본</option>
+                  <option value="중국">중국</option>
+                  <option value="독일">독일</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 개인 정보 -->
+          <div id="individualInfo" class="applicant-details" style="display: none;">
+            <div class="info-row">
+              <label>성명</label>
+              <input type="text" name="individual_name" id="individual_name" class="text-input" placeholder="홍길동" maxlength="50">
+            </div>
+            <div class="info-row">
+              <label>주소</label>
+              <input type="text" name="individual_address" id="individual_address" class="text-input" placeholder="서울특별시 강남구 테헤란로 123, 101동 101호" maxlength="200">
+            </div>
+            <div class="info-row">
+              <label>국적</label>
+              <div class="select-wrapper">
+                <select name="individual_nationality" id="individual_nationality" class="select-input">
+                  <option value="대한민국">대한민국</option>
+                  <option value="미국">미국</option>
+                  <option value="일본">일본</option>
+                  <option value="중국">중국</option>
+                  <option value="독일">독일</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -152,30 +198,48 @@
           <div class="section-title">발명자 정보 입력</div>
           <div class="required">* 필수 입력</div>
         </div>
-        <div class="input-help">발명자 정보를 작성하세요.</div>
+        <div class="input-help">실제 발명을 완성한 자연인의 정보를 작성하세요. (법인은 발명자가 될 수 없습니다)</div>
         
-        <div class="person-info-container">
-          <div class="person-info-row">
-            <label>이름</label>
-            <input type="text" name="inventor_name" class="text-input" placeholder="발명자의 이름을 입력하세요." required maxlength="100">
-          </div>
-          
-          <div class="person-info-row">
-            <label>국적</label>
-            <div class="select-wrapper">
-              <select name="inventor_nationality" class="select-input" required>
-                <option value="대한민국">대한민국</option>
-                <option value="미국">미국</option>
-                <option value="일본">일본</option>
-                <option value="중국">중국</option>
-                <option value="기타">기타</option>
-              </select>
+        <div class="inventors-container" id="inventors-container">
+          <div class="inventor-item" data-inventor="1">
+            <div class="inventor-header">
+              <h4>발명자 1</h4>
+              <button type="button" class="remove-inventor-btn" onclick="removeInventor(1)" style="display: none;">
+                <span class="remove-icon">×</span>
+              </button>
+            </div>
+            <div class="inventor-info">
+              <div class="info-row">
+                <label>성명</label>
+                <input type="text" name="inventor_name_1" id="inventor_name_1" class="text-input" placeholder="홍길동" required maxlength="50">
+              </div>
+              <div class="info-row">
+                <label>주소</label>
+                <input type="text" name="inventor_address_1" id="inventor_address_1" class="text-input" placeholder="서울특별시 강남구 테헤란로 123, 101동 101호" required maxlength="200">
+              </div>
+              <div class="info-row">
+                <label>국적</label>
+                <div class="select-wrapper">
+                  <select name="inventor_nationality_1" id="inventor_nationality_1" class="select-input" required>
+                    <option value="대한민국">대한민국</option>
+                    <option value="미국">미국</option>
+                    <option value="일본">일본</option>
+                    <option value="중국">중국</option>
+                    <option value="독일">독일</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="person-info-row">
-            <label>주소</label>
-            <input type="text" name="inventor_address" class="text-input" placeholder="발명자의 주소를 입력하세요." required maxlength="200">
+        </div>
+        
+        <div class="add-inventor-section">
+          <button type="button" id="addInventorBtn" class="btn-add-inventor">
+            <span class="add-icon">+</span> 발명자 추가
+          </button>
+          <div class="inventor-note">
+            ※ 최대 10명까지 발명자를 추가할 수 있습니다.
           </div>
         </div>
       </div>

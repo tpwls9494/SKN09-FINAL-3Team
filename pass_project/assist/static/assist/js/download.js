@@ -92,7 +92,7 @@ App.download = {
     if (App.data.currentDraftId) {
       // Django 백엔드 DOCX 다운로드 사용
       window.location.href = `/assist/download/docx/${App.data.currentDraftId}/`;
-      App.utils.showNotification('📄 DOCX 파일을 다운로드하고 있습니다...');
+      App.utils.showNotification('DOCX 파일을 다운로드하고 있습니다...');
     } else {
       // 클라이언트 사이드 DOCX 생성
       this.generateDOCXFromContent();
@@ -104,7 +104,7 @@ App.download = {
     if (App.data.currentDraftId) {
       // Django 백엔드 HWP 다운로드 사용 (현재는 텍스트 파일)
       window.location.href = `/assist/download/hwp/${App.data.currentDraftId}/`;
-      App.utils.showNotification('📝 HWP 파일을 다운로드하고 있습니다... (텍스트 형식)');
+      App.utils.showNotification('HWP 파일을 다운로드하고 있습니다... (텍스트 형식)');
     } else {
       // 클라이언트 사이드 텍스트 생성
       this.generateTextFromContent();
@@ -136,7 +136,7 @@ App.download = {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    App.utils.showNotification('📄 텍스트 파일로 다운로드되었습니다. (PDF 변환 기능 준비 중)');
+    App.utils.showNotification('📄스트 파일로 다운로드되었습니다. (PDF 변환 기능 준비 중)');
   },
   
   // 클라이언트 사이드 DOCX 생성

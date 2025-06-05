@@ -31,7 +31,7 @@
         <script>
           if (typeof App !== 'undefined') {
             App.data.currentDraftContent = `{{ draft.create_draft|escapejs }}`;
-            App.data.currentDraftId = {{ draft.draft_id }};
+            App.data.currentDraftId = `{{ draft.draft_id }}`;
           }
         </script>
       </div>
@@ -81,19 +81,16 @@
       <div class="format-options">
         <label class="format-option">
           <input type="radio" name="fileFormat" value="docx" checked>
-          <span class="format-icon">📄</span>
           <span class="format-name">docx</span>
         </label>
         
         <label class="format-option">
           <input type="radio" name="fileFormat" value="pdf">
-          <span class="format-icon">📋</span>
           <span class="format-name">pdf</span>
         </label>
         
         <label class="format-option">
           <input type="radio" name="fileFormat" value="hwp">
-          <span class="format-icon">📝</span>
           <span class="format-name">hwp</span>
         </label>
       </div>
