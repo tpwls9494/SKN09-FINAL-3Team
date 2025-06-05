@@ -63,8 +63,8 @@ ROOT_URLCONF = 'pass_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # 템플릿 디렉토리 경로
-        'APP_DIRS': True,
+        'DIRS': [BASE_DIR / 'templates'],  # 최상위 templates 폴더
+        'APP_DIRS': True,                  # 각 앱의 “templates/앱이름/”도 자동 탐색
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -127,8 +127,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+
 STATIC_URL = '/static/'
 # STATICFILES_DIRS = [BASE_DIR / "static"]
+
 
 CSRF_COOKIE_HTTPONLY = False
 
@@ -136,3 +138,5 @@ CSRF_COOKIE_HTTPONLY = False
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'core.User'
