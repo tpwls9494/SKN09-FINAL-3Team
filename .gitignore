@@ -2,3 +2,4 @@
 *.zip
 *.faiss
 vectordb/full_patent_metadata.jsonl
+
