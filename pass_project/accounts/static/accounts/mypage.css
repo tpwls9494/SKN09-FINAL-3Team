@@ -72,8 +72,11 @@ body {
 .sidebar li {
   font-weight: bold;
   font-size: 20px;
-  color: #0F1E46;
+  color: #000;
   line-height: 3em;
+}
+.sidebar li a {
+  text-decoration: none;
 }
 
 /* 메인 콘텐츠 */
