@@ -127,12 +127,21 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# 프로젝트 전체에서 정적 파일을 제공할 때 사용할 URL 접두사
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [BASE_DIR / "static"]
 
-CSRF_COOKIE_HTTPONLY = False
+# 개발 모드에서(=DEBUG=True) 정적 파일을 찾을 디렉터리들
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static",       # 예: pass_project/core/static
+]
+
+# 프로덕션 모드에서 수집(collectstatic)된 파일이 모일 루트 디렉터리
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # (배포 시에 사용)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTH_USER_MODEL = 'core.User'

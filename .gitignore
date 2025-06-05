@@ -5,3 +5,5 @@ vectordb/full_patent_metadata.jsonl
 /migrations/*.py
 /migrations/*.pyc
 !**/migrations/init.py
+pass_project/pass_project/settings.py
+pass_project/pass_project/settings.py
