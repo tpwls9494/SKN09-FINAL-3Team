@@ -2,3 +2,9 @@
 *.faiss
 vectordb/full_patent_metadata.jsonl
 
+# Django 마이그레이션 무시
+**/migrations/*.py
+**/migrations/*.pyc
+!**/migrations/__init__.py
+
+.env
