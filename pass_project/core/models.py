@@ -6,16 +6,12 @@ import uuid
 # ✅ 사용자 모델
 class User(AbstractUser):
     user_code = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.BigIntegerField(blank=True, null=False)
-    user_pw = models.CharField(max_length=200, blank=True, null=False)
     user_nickname = models.CharField(max_length=20, blank=True, null=True)
-    user_privilege = models.BooleanField(default=False)
-    user_created_date = models.DateTimeField(auto_now_add=True)
+    is_auto_login = models.IntegerField(blank= True, null=True)
     user_left_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.username
-
 
 # ✅ 로그인 로그
 class LoginLog(models.Model):
