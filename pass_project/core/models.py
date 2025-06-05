@@ -101,4 +101,3 @@ class Evaluation(models.Model):
 
     def __str__(self):
         return f'평가 {self.eval_id} - {self.draft.draft_name}'
-    
