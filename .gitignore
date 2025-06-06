@@ -4,4 +4,5 @@
 vectordb/full_patent_metadata.jsonl
 /migrations/*.py
 /migrations/*.pyc
+!**/migrations/__init__.py
 !**/migrations/init.py
