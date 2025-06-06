@@ -30,7 +30,7 @@
             <li>user3 <span><img src="{% static 'user_admin/img/lock.png' %}" /><img src="{% static 'user_admin/img/stop.png' %}" /></span></li>
             <li>user4 <span><img src="{% static 'user_admin/img/lock.png' %}" /><img src="{% static 'user_admin/img/stop.png' %}" /></span></li>
           </ul>
-          <button class="add-user">+ 사용자 생성</button>
+          <button class="add-user" onclick="openUserCreateModal()">+ 사용자 생성</button>
         </section>
 
         <section class="log-section">
@@ -66,6 +66,16 @@
             </tbody>
           </table>
         </section>
+        <div class = "modal">
+          <div id="user-create-modal">
+            <h3> 사용자 생성 </h3>
+            <div class="user-create-form">
+              <h4> ID </h4>
+            </div>
+            <button onclick="cancelUser()">취소</button>
+            <button onclick="addUser()">추가</button>
+          </div>
+        </div>
       </main>
     </div>
 </body>
