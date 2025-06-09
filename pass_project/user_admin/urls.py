@@ -8,20 +8,22 @@ urlpatterns = [
     #--------- 기본 진입점을 User 관리로 설정 ---------------------------------------
     path('', views.user_management_view, name='user'),
 
-    #--------- Group 관리 페이지 --------------------------------------------------
-    path('group/', views.group_management_view, name='group'),
-
     #--------- User CRUD API ----------------------------------------------------
     # POST: 새 사용자(임시) 생성
-    path('create/', views.create_user, name='create_user'),
+    path('user/create/', views.create_user, name='create_user'),
     # POST: 특정 username으로 사용자 삭제
-    path('delete/', views.delete_user, name='delete_user'),
+    path('user/delete/', views.delete_user, name='delete_user'),
     # GET: 사용자 목록 조회
-    path('list/', views.get_user_list, name='get_user_list'),
+    path('user/list/', views.get_user_list, name='get_user_list'),
     # POST: 비밀번호 초기화
-    path('reset/', views.reset_user, name='reset_user'),
+    path('user/reset/', views.reset_user, name='reset_user'),
     # POST: 사용자 비활성화
-    path('deactivate/', views.deactivate_user, name='deactivate_user'),
+    path('user/deactivate/', views.deactivate_user, name='deactivate_user'),
+
+
+
+    #--------- Group 관리 페이지 --------------------------------------------------
+    path('group/', views.group_management_view, name='group'),
 
     #--------- Group CRUD & 멤버 관리 API ----------------------------------------
     path('group/create/', views.create_group, name='create_group'),
