@@ -1,5 +1,5 @@
 from django import forms
-from .models import Template
+from core.models import Template
 
 class TemplateForm(forms.ModelForm):
     class Meta:

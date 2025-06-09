@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 from .forms import TemplateForm
-from .models import Template, Draft
+from core.models import Template, Draft
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from docx import Document
