@@ -105,17 +105,14 @@
 
     <!-- 사용자 정지 확인 모달 -->
   <div id="deactivateGroupUserModal" class="modal hidden">
-    <h3>⛔ 그룹 정지</h3>
-    <p id="deactivateConfirmText">“그룹명” 그룹을 정지하시겠습니까?<br><small>(정지된 그룹은 더 이상 사용할 수 없습니다.)</small></p>
-    <!-- 사용자 정지 확인 모달 안에 다음 요소 추가 -->
-    <input type="hidden" id="deactivateTargetUsername" />
+    <p id="deactivateConfirmText">“그룹 이름” 그룹을 정지하시겠습니까?<br><small>(정지된 그룹은 더 이상 사용할 수 없습니다.)</small></p>
     <input type="hidden" id="deactivateTargetGroupId" />
-
     <div class="modal-buttons">
-      <button class="cancel-btn" onclick="closeDeactivateUserModal()">아니요</button>
-      <button class="confirm-btn" onclick="confirmDeactivateUser()">네</button>
+      <button onclick="confirmDeactivateGroup()">확인</button>
+      <button onclick="closeDeactivateUserModal()">취소</button>
     </div>
   </div>
+
 
 
   <script src="{% static 'user_admin/group.js' %}"></script>

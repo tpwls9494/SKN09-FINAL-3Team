@@ -31,4 +31,8 @@ urlpatterns = [
 
     path('group/user_list/', views.group_user_list, name='group_user_partial'),
 
+    path('group/toggle-activation/', views.toggle_team_activation, name='toggle_team_activation'),
+
+    path('group/deactivate/', views.deactivate_group, name='deactivate_group'),
+
 ]

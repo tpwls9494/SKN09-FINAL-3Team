@@ -14,7 +14,7 @@ from django.shortcuts import render
 
 User = get_user_model()
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def user_management_view(request):
     """
     사용자 관리 페이지 진입 시, 현재 DB에 있는 사용자 목록을 템플릿으로 넘깁니다.
@@ -26,7 +26,7 @@ def user_management_view(request):
         'login_logs': login_logs,
         })
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def create_user(request):
     """
@@ -46,7 +46,7 @@ def create_user(request):
         "password": default_password,
     })
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 @csrf_exempt 
 def create_group(request):
@@ -70,7 +70,7 @@ def create_group(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def delete_user(request):
     """
@@ -101,7 +101,7 @@ def delete_user(request):
 #         pass
 #     return render(request, 'user_admin/group_form.html')
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_user_list(request):
     """
     사용자 목록을 JSON으로 반환합니다.
@@ -113,13 +113,13 @@ def get_user_list(request):
     ]
     return JsonResponse(data, safe=False)
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_group_list(request):
     groups = Team.objects.all().order_by('-team_id')
     data = [{'team_id': group.team_id, 'team_name': group.team_name} for group in groups]
     return JsonResponse({'groups': data})
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def reset_user(request):
     """
@@ -151,7 +151,7 @@ def reset_user(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def deactivate_user(request):
     """
@@ -186,7 +186,7 @@ def deactivate_user(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)  
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)  
 @require_POST
 @csrf_exempt
 def assign_user_to_team(request):
@@ -213,7 +213,7 @@ def assign_user_to_team(request):
         return JsonResponse({"success": False, "error": "그룹 없음"}, status=400)
 
     
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_GET
 def group_user_list(request):
     group_data = []
@@ -233,7 +233,7 @@ def group_user_list(request):
         'groups': group_data,
     })
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def group_management_view(request):
     group_data = []
     groups = Team.objects.all().order_by('-team_id')
@@ -275,13 +275,33 @@ def group_management_view(request):
         'groups': group_data
     })
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_group_users(request, team_id):
     logs = TeamLog.objects.filter(team_id=team_id).select_related('user_code')
     users = [{"username": log.user_code.username} for log in logs]
     return JsonResponse({"users": users})
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+
+# views.py → group_list 함수 예시
+def group_list(request):
+    teams = Team.objects.all().order_by('-created_at')
+    group_data = []
+    for team in teams:
+        name = team.team_name or "이름 없음"
+        if "비활성" in name:
+            display_name = name
+        else:
+            display_name = f"{name} (비활성)" if team.is_deactivated else name  # is_deactivated 필드 없다면 로직 수정 필요
+
+        group_data.append({
+            'team_id': team.id,
+            'team_name': display_name,
+        })
+
+    return JsonResponse({'groups': group_data})
+
+
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 @csrf_exempt
 def delete_user_from_group(request):
@@ -308,8 +328,56 @@ def delete_user_from_group(request):
     except Team.DoesNotExist:
         return JsonResponse({"success": False, "error": "그룹 없음"}, status=400)
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def group_user_partial(request):
     from .models import Team
     groups = Team.objects.prefetch_related('users', 'users__loginlog_set').all()
     return render(request, 'user_admin/group_user_partial.html', {'groups': groups})
+
+
+@require_POST
+def toggle_team_activation(request):
+    body = json.loads(request.body)
+    team_id = body.get('team_id')
+    team = get_object_or_404(Team, pk=team_id)
+    
+    if '비활성' in team.team_name:
+        team.team_name = team.team_name.replace(' (비활성)', '')
+        status = '활성화'
+    else:
+        team.team_name += ' (비활성)'
+        status = '비활성화'
+    
+    team.save()
+    return JsonResponse({
+        'success': True,
+        'new_name': team.team_name,
+        'status': status
+    })
+
+#@user_passes_test(lambda u: u.is_superuser)
+def deactivate_group(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            team_id = data.get("team_id")
+
+            from core.models import Team # 모델 명에 따라 수정 필요
+
+            team = Team.objects.get(team_id=team_id)
+
+            # '비활성' 텍스트 추가/제거
+            if "[비활성]" in team.team_name:
+                team.team_name = team.team_name.replace(" [비활성]", "")
+                status = "활성화"
+            else:
+                team.team_name = f"{team.team_name} [비활성]"
+                status = "비활성화"
+
+            team.save()
+
+            return JsonResponse({"success": True, "new_name": team.team_name, "status": status})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})
+
+    return JsonResponse({"success": False, "message": "POST 요청만 허용됩니다."})

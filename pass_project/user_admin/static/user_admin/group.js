@@ -120,6 +120,7 @@ function loadGroupList() {
               class="icon-btn deactivate-group-btn"
               title="그룹 정지"
               data-group-id="${group.team_id}"
+              data-group-name="${group.team_name}" 
             />
           </div>
         `;
@@ -270,25 +271,19 @@ function deleteUserFromGroup(teamId, user_code) {
 }
 
 
-function openDeactivateGroupModal(teamName, teamId) {
+function openDeactivateGroupModal(teamId) {
+  const teamName = document.querySelector(`.deactivate-group-btn[data-group-id="${teamId}"]`)
+                    .getAttribute("data-group-name");
+
+  // 모달 텍스트 설정
   document.getElementById("deactivateConfirmText").innerHTML =
     `“${teamName}” 그룹을 정지하시겠습니까?<br><small>(정지된 그룹은 더 이상 사용할 수 없습니다.)</small>`;
-  
+
   document.getElementById("deactivateTargetGroupId").value = teamId;
 
-  // 임시로 첫 번째 사용자 username을 사용
-  fetch(`/api/group/${teamId}/users`)  // ← 이런 API가 필요
-    .then(response => response.json())
-    .then(data => {
-      if (data.users && data.users.length > 0) {
-        document.getElementById("deactivateTargetUsername").value = data.users[0].username;
-      } else {
-        document.getElementById("deactivateTargetUsername").value = "";
-        alert("그룹에 등록된 사용자가 없습니다.");
-      }
-    });
-
-  document.getElementById("deactivateGroupUserModal").classList.remove("hidden");
+  // 모달 열기
+  document.getElementById('modalOverlay').style.display = 'block';
+  document.getElementById("deactivateGroupUserModal").style.display = 'block';
 }
 
 
@@ -296,6 +291,63 @@ function closeDeactivateUserModal() {
   document.getElementById('modalOverlay').style.display = 'none';
   document.getElementById('deactivateGroupUserModal').style.display = 'none';
 }
+
+function confirmDeactivateGroup() {
+  const teamId = document.getElementById("deactivateTargetGroupId").value;
+
+  fetch(`/user_admin/group/deactivate/`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: JSON.stringify({ team_id: teamId })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("그룹이 정지되었습니다.");
+        closeDeactivateUserModal();
+        loadGroupList(); // 다시 불러오기
+      } else {
+        alert("정지 실패: " + data.message);
+      }
+    })
+    .catch(err => {
+      console.error("그룹 정지 요청 실패:", err);
+      alert("서버 오류: " + err.message);
+    });
+}
+
+function toggleTeamActivation(teamId, nameElement) {
+  fetch('/user_admin/toggle_team_activation/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `team_id=${teamId}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      nameElement.textContent = data.new_name;  // 화면에 이름 반영
+      alert(`${data.status}되었습니다`);
+    } else {
+      alert(data.error || '변경 실패');
+    }
+  });
+}
+
+// 예시: 비활성화 버튼 클릭 시
+document.querySelectorAll('.deactivate-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const teamId = this.dataset.teamId;
+    const nameElement = this.closest('.group-box').querySelector('.group-header span');
+    toggleTeamActivation(teamId, nameElement);
+  });
+});
 
 
 // js 바인딩
