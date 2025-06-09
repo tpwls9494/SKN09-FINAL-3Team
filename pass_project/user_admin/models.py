@@ -1,3 +1,1 @@
-from django.db import models
-
-# Create your models here.
+# 데이터 베이스 테이블 구조 정의

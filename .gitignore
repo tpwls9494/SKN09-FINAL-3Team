@@ -6,3 +6,4 @@ vectordb/full_patent_metadata.jsonl
 /migrations/*.pyc
 !**/migrations/__init__.py
 !**/migrations/init.py
+
