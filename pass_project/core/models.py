@@ -28,7 +28,7 @@ class LoginLog(models.Model):
 # ✅ 팀 모델
 class Team(models.Model):
     team_id = models.AutoField(primary_key=True)
-    team_name = models.CharField(max_length=50)
+    team_name = models.CharField(max_length=50, blank=False, null=False)
 
     def __str__(self):
         return self.team_name
@@ -42,7 +42,8 @@ class TeamLog(models.Model):
     action_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.team.team_name} - {self.user.username} - {self.action}'
+        return f'{self.team_id.team_name} - {self.user_code.username}'
+
 
 
 # ✅ 템플릿

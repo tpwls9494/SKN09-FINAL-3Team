@@ -1,32 +1,31 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Team, TeamLog
+from core.models import Team, TeamLog
 
 User = get_user_model() # 실제 프로젝트에서 설정된 사용자 모델을 가져옴
 
+# # ✅ 1. 사용자 생성 폼
+# # 사용자 생성을 위한 폼 정의 
+# class UserCreateForm(forms.ModelForm): # ModelForm은 특정 모델과 직접 연결되어 풀 필드를 자동 생성함
+#     password = forms.CharField(widget=forms.PasswordInput)
 
-# ✅ 1. 사용자 생성 폼
-# 사용자 생성을 위한 폼 정의 
-class UserCreateForm(forms.ModelForm): # ModelForm은 특정 모델과 직접 연결되어 풀 필드를 자동 생성함
-    password = forms.CharField(widget=forms.PasswordInput)
+#     class Meta:
+#         model = User
+#         fields = ['username', 'password', 'user_nickname', 'is_auto_login']
 
-    class Meta:
-        model = User
-        fields = ['username', 'password', 'user_nickname', 'is_auto_login']
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
-        if commit:
-            user.save()
-        return user
+#     def save(self, commit=True):
+#         user = super().save(commit=False)
+#         user.set_password(self.cleaned_data["password"])
+#         if commit:
+#             user.save()
+#         return user
 
 
-# ✅ 2. 사용자 탈퇴 처리 폼
-class UserDeactivateForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ['user_left_date']
+# # ✅ 2. 사용자 탈퇴 처리 폼
+# class UserDeactivateForm(forms.ModelForm):
+#     class Meta:
+#         model = User
+#         fields = ['user_left_date']
 
 
 # ✅ 3. 팀(그룹) 생성 폼

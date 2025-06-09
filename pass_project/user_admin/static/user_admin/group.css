@@ -84,7 +84,7 @@ h1 {
 }
 
 /* ===== 공통 카드 스타일 ===== */
-.user-list-section,
+.groupList-section,
 .log-section {
   background-color: white;
   border-radius: 20px;
@@ -94,11 +94,11 @@ h1 {
   flex-direction: column;
 }
 
-.user-list-section {
+.groupList-section {
   max-width: 400px;
 }
 
-.user-list-section h2,
+.groupList-section h2,
 .log-section h2 {
   font-size: 18px;
   margin-top: 0px;
@@ -194,3 +194,141 @@ h1 {
 .username {
   flex: 1;
 }
+
+/* 모달 안 .form-group */
+#groupModal .form-group {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#groupModal .form-group label {
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #0d1b3d;
+}
+
+#groupModal .form-group input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#groupModal {
+  display: none;
+}
+
+/* 모달 오버레이 (기존에도 있었던 것 유지) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none; /* JS로 제어됨 */
+}
+
+/* 그룹 생성 모달 */
+#groupModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 32px 36px;
+  width: 500px;
+  z-index: 1000; /* modal-overlay 위 */
+  display: none; /* JS로 제어됨 */
+}
+
+/* 제목 스타일 */
+#groupModal h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 결과 메시지 */
+#groupResult {
+  font-size: 14px;
+  margin-top: 12px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 32px 36px;
+  width: 450px;
+  z-index: 1000;
+  display: none;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal .modal-body {
+  margin-bottom: 20px;
+}
+
+.modal .form-group {
+  margin-bottom: 16px;
+}
+
+.modal .form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-buttons button {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal .cancel-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.modal .confirm-btn {
+  background: #0d1b3d;
+  color: white;
+}
+
