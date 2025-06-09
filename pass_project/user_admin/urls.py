@@ -23,12 +23,12 @@ urlpatterns = [
 
     # path('group/delete/', views.delete_group, name='delete_group'),
 
+    path("group/user/delete/", views.delete_user_from_group, name="delete_user_from_group"),
+
     path('group/list/', views.get_group_list, name='get_group_list'),
 
     path('group/assign/', views.assign_user_to_team, name='assign_user_to_team'),
 
-    path('group/remove/', views.remove_user_from_team, name='remove_user_from_team'),
-
-    path('group/user_list/', views.group_user_list, name='group_user_list'),
+    path('group/user_list/', views.group_user_list, name='group_user_partial'),
 
 ]

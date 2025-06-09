@@ -37,14 +37,26 @@
               <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
             </div>
             <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
-              {% for user in group.users %}
+            {% for user in group.users %}
               <li>
-                <span class="status {% if user.is_active %}pink{% else %}gray{% endif %}"></span>
-                <span class="username">{{ user.user_nickname }}</span>
+                <span class="status 
+                  {% if not user.is_active %}
+                    gray
+                  {% elif user.is_logged_in %}
+                    blue
+                  {% else %}
+                    red
+                  {% endif %}
+                "></span>
+                <span class="username">{{ user.user_nickname|default:user.username }}</span>
+              
+                <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" 
+                    onclick="deleteUserFromGroup('{{ group.team_id }}', '{{ user.user_code }}')">
+
               </li>
-              {% empty %}
-              <li>등록된 사용자가 없습니다.</li>
-              {% endfor %}
+            {% empty %}
+              <li class="empty-message">등록된 사용자가 없습니다.</li>
+            {% endfor %}
             </ul>
           </div>
         {% endfor %}

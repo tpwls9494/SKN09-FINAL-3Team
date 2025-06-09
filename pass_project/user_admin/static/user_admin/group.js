@@ -206,36 +206,68 @@ function confirmAddUserToGroup() {
 
 }
 
-function confirmDeactivateUser() {
-  const username = document.getElementById('deactivateTargetUsername').textContent;
-  const groupId = document.getElementById('deactivateTargetGroupId').value; // hidden input 등으로 저장
+function loadGroupUsers(teamId, container) {
+    container.innerHTML = ''; 
+    users.forEach(user => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="status ${statusClass}"></span>
+          <span class="username">${user.user_nickname || user.username}</span>
+          <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" onclick="deleteUserFromGroup(${teamId}, '${user.user_code}')">
+          `;
+        container.appendChild(li);
+    });
+}
 
-  fetch('/user_admin/group/remove/', {
-    method: 'POST',
+function deleteUserFromGroup(teamId, user_code) {
+  if (!confirm("정말로 이 사용자를 그룹에서 삭제하시겠습니까?")) return;
+
+  fetch(`/user_admin/group/user/delete/`, {
+    method: "POST",
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken')
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken")
     },
-    body: JSON.stringify({
-      username: username,
-      team_id: groupId
-    })
+    body: JSON.stringify({ team_id: teamId, user_code: user_code })
   })
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error("응답이 실패했습니다");
+
+    return res.json(); // 💥 여기서 HTML이 오면 에러 발생
+  })
   .then(data => {
     if (data.success) {
-      alert(`${username}님이 그룹에서 제거되었습니다.`);
-      closeDeactivateUserModal();
-      // 필요 시: loadGroupUserList(groupId);
+      alert("삭제되었습니다.");
+      // ❗ 그룹 목록뿐 아니라 사용자 목록도 다시 로드
+      const expandedBox = document.querySelector('.group-box.expanded');
+      if (expandedBox) {
+        const teamId = expandedBox.dataset.teamId;
+        const container = expandedBox.querySelector('.group-user-list');
+        fetch(`/api/group/${teamId}/users`)
+          .then(res => res.json())
+          .then(data => {
+            container.innerHTML = '';
+            data.users.forEach(user => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <span class="status ${user.is_logged_in ? 'online' : 'offline'}"></span>
+                <span class="username">${user.user_nickname || user.username}</span>
+                <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" onclick="deleteUserFromGroup(${teamId}, '${user.user_code}')">
+              `;
+              container.appendChild(li);
+            });
+          });
+      }
     } else {
-      alert(`에러: ${data.error}`);
+      alert("삭제 실패: " + data.message);
     }
   })
   .catch(err => {
-    alert(`요청 실패: ${err}`);
+    console.error("삭제 오류:", err);
+    alert("서버 오류: " + err.message);
   });
 }
-
 
 
 function openDeactivateGroupModal(teamName, teamId) {
