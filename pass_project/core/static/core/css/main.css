@@ -36,7 +36,10 @@ body {
   font-weight: 1000;
 }
 
-.logo img { height: 50px; margin-right: 10px; }
+.logo img {
+  height: 50px;
+  margin-right: 10px;
+}
 
 .navbar nav {
   display: flex;

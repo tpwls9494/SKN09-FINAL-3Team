@@ -140,7 +140,8 @@
 <body>
   <!-- 헤더 -->
   <header class="header">
-    <div class="header-content">
+    {% comment %} <div class="header-content"> {% endcomment %}
+    <div class="header-content" onclick="location.href='{{ request.scheme }}://{{ request.get_host }}{% url 'core:main' %}?role=user'">
       <img src="{% static 'accounts/images/logo_white.png' %}" alt="로고" class="logo">
       <span class="logo-text">PASS</span>
     </div>

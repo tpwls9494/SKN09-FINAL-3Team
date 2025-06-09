@@ -33,14 +33,14 @@ body {
 
 #logo-img{
     margin-top: 3px;
-    width: 40px;
-    height: 40px;
+    width: 80px;
+    height: 80px;
     cursor: pointer;
 }
 
 #logo-title {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 1000;
     color: #0F1E46;
 }
 
