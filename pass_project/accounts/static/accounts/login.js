@@ -65,7 +65,7 @@ $(document).ready(function () {
                 /* 성공: 서버가 주는 redirect_url 없으면 메인(/)으로 */
                 window.location.href = data.redirect_url || '/';
                 /* 로그인 로그 남기기 (실패해도 화면 전환엔 영향 없음) */
-                fetch('/accounts/ajax-insert-login-log', {
+                fetch('/accounts/ajax-insert-login-log/', {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrftoken,

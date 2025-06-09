@@ -14,7 +14,7 @@ from django.shortcuts import render
 
 User = get_user_model()
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def user_management_view(request):
     """
     사용자 관리 페이지 진입 시, 현재 DB에 있는 사용자 목록을 템플릿으로 넘깁니다.
@@ -26,7 +26,7 @@ def user_management_view(request):
         'login_logs': login_logs,
         })
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def create_user(request):
     """
@@ -46,7 +46,7 @@ def create_user(request):
         "password": default_password,
     })
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 @csrf_exempt 
 def create_group(request):
@@ -70,7 +70,7 @@ def create_group(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def delete_user(request):
     """
@@ -100,8 +100,7 @@ def delete_user(request):
 #         # 그룹 삭제 로직 추가
 #         pass
 #     return render(request, 'user_admin/group_form.html')
-
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_user_list(request):
     """
     사용자 목록을 JSON으로 반환합니다.
@@ -113,13 +112,13 @@ def get_user_list(request):
     ]
     return JsonResponse(data, safe=False)
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_group_list(request):
     groups = Team.objects.all().order_by('-team_id')
     data = [{'team_id': group.team_id, 'team_name': group.team_name} for group in groups]
     return JsonResponse({'groups': data})
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def reset_user(request):
     """
@@ -151,7 +150,7 @@ def reset_user(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 def deactivate_user(request):
     """
@@ -186,7 +185,7 @@ def deactivate_user(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)  
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)  
 @require_POST
 @csrf_exempt
 def assign_user_to_team(request):
@@ -213,7 +212,7 @@ def assign_user_to_team(request):
         return JsonResponse({"success": False, "error": "그룹 없음"}, status=400)
 
     
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_GET
 def group_user_list(request):
     group_data = []
@@ -233,7 +232,7 @@ def group_user_list(request):
         'groups': group_data,
     })
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def group_management_view(request):
     group_data = []
     groups = Team.objects.all().order_by('-team_id')
@@ -275,7 +274,7 @@ def group_management_view(request):
         'groups': group_data
     })
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def get_group_users(request, team_id):
     logs = TeamLog.objects.filter(team_id=team_id).select_related('user_code')
     users = [{"username": log.user_code.username} for log in logs]
@@ -301,7 +300,7 @@ def group_list(request):
     return JsonResponse({'groups': group_data})
 
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 @require_POST
 @csrf_exempt
 def delete_user_from_group(request):
@@ -328,7 +327,7 @@ def delete_user_from_group(request):
     except Team.DoesNotExist:
         return JsonResponse({"success": False, "error": "그룹 없음"}, status=400)
 
-#@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
 def group_user_partial(request):
     from .models import Team
     groups = Team.objects.prefetch_related('users', 'users__loginlog_set').all()
@@ -355,7 +354,7 @@ def toggle_team_activation(request):
         'status': status
     })
 
-#@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser)
 def deactivate_group(request):
     if request.method == "POST":
         try:

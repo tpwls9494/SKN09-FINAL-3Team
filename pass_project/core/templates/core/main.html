@@ -31,7 +31,7 @@
         <span class="nav-user">관리자님</span>
         <a href="{% url 'accounts:logout' %}" class="action-link">로그아웃</a>
         <span class="divider">|</span>
-        <a href="{% url 'accounts:mypage' %}" class="action-link">관리자 페이지</a>
+        <a href="{% url 'user_admin:user' %}" class="action-link">관리자 페이지</a>
 
       <!-- Flag 3: 일반 사용자 -->
       {% elif flag == 3 %}
@@ -45,11 +45,6 @@
         <a href="{% url 'accounts:mypage' %}" class="action-link">마이페이지</a>
       {% endif %}
     </nav>
-    {% comment %} <nav>
-      <a href="#" onclick="goToAIassistpage(); return false;">AI assist</a>
-      <a href="#" onclick="goToAIqapage(); return false;">AI Q&A</a>
-      <a href="{% url 'accounts:login' %}">로그인</a>
-    </nav> {% endcomment %}
   </header>
 
   
@@ -69,8 +64,6 @@
   <!-- 3) 세 번째 섹션: service_features.jpg -->
   <section class="section features">
   </section>
-
-
 
   <!-- 4) AI Assist 섹션: 오른쪽에 이미지, 왼쪽에 텍스트 -->
   <section class="section ai-assist">
