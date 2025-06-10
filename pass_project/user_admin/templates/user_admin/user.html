@@ -11,7 +11,8 @@
 <body>
   <div class="wrapper">
     <div class="header">
-      <div class="logo">
+      {% comment %} <div class="logo"> {% endcomment %}
+      <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
         <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
         <span>PASS</span>
       </div>

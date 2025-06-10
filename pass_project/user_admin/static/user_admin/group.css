@@ -47,8 +47,8 @@ h1 {
 }
 
 .logo img {
-  width: 30px;
-  height: 30px;
+  width: 80px !important;
+  height: 80px !important;
 }
 
 .tab-nav {

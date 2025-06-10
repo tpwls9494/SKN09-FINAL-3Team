@@ -23,14 +23,14 @@ body {
   gap: 12px;
 }
 
-.logo {
-  width: 40px;
-  height: 40px;
+.header-content .logo {
+  width: 80px !important;
+  height: 80px !important;
 }
 
 .logo-text {
   color: #fff;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 1px;
 }

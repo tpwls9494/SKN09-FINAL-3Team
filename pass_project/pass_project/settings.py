@@ -53,7 +53,11 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    
+    # 'accounts.middleware.EnforceAutoLogoutMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -63,8 +67,8 @@ ROOT_URLCONF = 'pass_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # 최상위 templates 폴더
-        'APP_DIRS': True,                  # 각 앱의 “templates/앱이름/”도 자동 탐색
+        'DIRS': [BASE_DIR / 'templates'],  # 템플릿 디렉토리 경로
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -129,16 +133,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-
+# 프로젝트 전체에서 정적 파일을 제공할 때 사용할 URL 접두사
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# 개발 모드에서(=DEBUG=True) 정적 파일을 찾을 디렉터리들
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static",       # 예: pass_project/core/static
+]
 
-CSRF_COOKIE_HTTPONLY = False
+# 프로덕션 모드에서 수집(collectstatic)된 파일이 모일 루트 디렉터리
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # (배포 시에 사용)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 AUTH_USER_MODEL = 'core.User'
+
+
+# 브라우저 종료 시 세션 쿠키를 자동으로 삭제하도록 전역 설정
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
