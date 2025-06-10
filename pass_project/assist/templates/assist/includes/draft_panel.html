@@ -1,64 +1,49 @@
+{% load static %}
+
 <!-- 오른쪽 패널: 생성된 특허 초안 -->
 <div class="panel draft-panel">
   <div class="panel-header">
     <div class="panel-title">생성된 특허 명세서 초안</div>
   </div>
   <div class="panel-body">
-    {% if draft %}
-      <div id="draftContent" style="display: block;">
-        <div class="markdown-content">
-          {{ draft.create_draft|linebreaks }}
-        </div>
-        
-        <!-- 일반 모드 버튼 -->
-        <div class="button-row" id="normalButtons">
-          <button type="button" class="btn btn-success" onclick="App.draft.save()">저장</button>
-          <button type="button" class="btn btn-warning" onclick="App.draft.enableEdit()">직접 수정</button>
-          <button type="button" class="btn btn-info" onclick="App.draft.requestAI()">AI 요청</button>
-          <button type="button" class="btn btn-primary" onclick="App.evaluation.start()">AI 평가</button>
-          <button type="button" class="btn btn-secondary" onclick="App.draft.download()">다운로드</button>
-          <a href="{% url 'assist:download_pdf' draft.draft_id %}" class="btn btn-info">PDF 다운로드</a>
-          <a href="{% url 'assist:download_docx' draft.draft_id %}" class="btn btn-info">DOCX 다운로드</a>
-        </div>
-        
-        <!-- 수정 모드 버튼 -->
-        <div class="button-row edit-mode-buttons" id="editButtons" style="display: none;">
-          <button type="button" class="btn btn-secondary" onclick="App.draft.cancelEdit()">취소</button>
-          <button type="button" class="btn btn-primary" onclick="App.draft.saveEdit()">수정</button>
-        </div>
-        
-        <!-- 기존 Draft 내용을 JavaScript에서 사용할 수 있도록 숨겨진 데이터 -->
-        <script>
-          if (typeof App !== 'undefined') {
-            App.data.currentDraftContent = `{{ draft.create_draft|escapejs }}`;
-            App.data.currentDraftId = `{{ draft.draft_id }}`;
-          }
-        </script>
-      </div>
-    {% else %}
-      <div class="no-draft-message" id="noDraftMessage">
-        <p>템플릿을 작성하여 특허 초안을 생성하세요.</p>
-      </div>
+    <div class="no-draft-message" id="noDraftMessage">
+      <p>템플릿을 작성하여 특허 초안을 생성하세요.</p>
+    </div>
       
-      <div id="draftContent" style="display: none;">
-        <!-- JavaScript로 동적 생성될 영역 -->
-        
-        <!-- 일반 모드 버튼 -->
-        <div class="button-row" id="normalButtons">
-          <button type="button" class="btn btn-success" onclick="App.draft.save()">저장</button>
-          <button type="button" class="btn btn-warning" onclick="App.draft.enableEdit()">직접 수정</button>
-          <button type="button" class="btn btn-info" onclick="App.draft.requestAI()">AI 요청</button>
-          <button type="button" class="btn btn-primary" onclick="App.evaluation.start()">AI 평가</button>
-          <button type="button" class="btn btn-secondary" onclick="App.draft.download()">다운로드</button>
-        </div>
-        
-        <!-- 수정 모드 버튼 -->
-        <div class="button-row edit-mode-buttons" id="editButtons" style="display: none;">
-          <button type="button" class="btn btn-secondary" onclick="App.draft.cancelEdit()">취소</button>
-          <button type="button" class="btn btn-primary" onclick="App.draft.saveEdit()">수정</button>
+    <div id="draftContent" style="display: none;">
+      <!-- JavaScript로 동적 생성될 영역 -->
+    </div>
+
+    <div class="draftFooter">
+      <!-- AI요청 iunput-->
+      <div id="activeRequestAI" style="display:none;">
+        <div id='inputWithButton'>
+          <input type="text" id="input-requestai" placeholder="pass에게 바꾸고자 하는 내용을 알려주세요."/>
+          <button type="button" id="sent-ai-request">전송</button>
         </div>
       </div>
-    {% endif %}
+        
+      <!-- 일반 모드 버튼 -->
+      <div class="button-row" id="normalButtons">
+        <div id="starting-container">
+          <button type="button" class="draft_savebutton" onclick="App.draft.save()">저장</button>
+        </div>
+        <div id="ending-container">
+          <button type="button" class="draft_self_modifybutton" onclick="App.draft.enableEdit()"><i class="fa-solid fa-pen-to-square"></i> 직접 수정</button>
+          <div class="align-logos">
+            <button type="button" class="draft_request_aibutton" onclick="App.draft.requestAI()"><img src="{% static 'assist/images/logo.png' %}" alt="로고" class="request-logo"/> AI 요청</button>
+          </div>
+          <button type="button" class="draft_evalbutton" onclick="App.evaluation.start()"><i class="fa-solid fa-file-circle-check"></i> AI 평가</button>
+          <button type="button" class="draft_downloadbutton" onclick="App.download.openModal()"><i class="fa-solid fa-download"></i> 다운로드</button>
+        </div>
+      </div>
+        
+      <!-- 수정 모드 버튼 -->
+      <div class="button-row edit-mode-buttons draft-self-modify-container" id="editButtons" style="display: none;">
+        <button type="button" class="draft-cancelbutton" onclick="App.draft.cancelEdit()">취소</button>
+        <button type="button" class="draft-modifybutton" onclick="App.draft.saveEdit()">수정</button>
+      </div>
+    </div>
     
     {% if feedback %}
       <div class="evaluation-feedback">
@@ -69,7 +54,7 @@
   </div>
 </div>
 <div class="modal-overlay" id="downloadModal" style="display: none;">
-  <div class="modal-container">
+  <div class="modal-container" id="modalContainer">
     <div class="modal-header">
       <h3>파일다운로드</h3>
       <button class="modal-close" onclick="App.download.closeModal()">×</button>

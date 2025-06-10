@@ -1,3 +1,4 @@
+let originalEvaluationHTML = "";
 // 평가 관련 기능
 App.evaluation = {
   // AI 평가 시작
@@ -8,6 +9,8 @@ App.evaluation = {
     }
     
     App.utils.showNotification('AI가 특허 명세서를 평가 중입니다...');
+
+    let parsedResult = App.draft.parseDraftContent(App.data.currentDraftContent);
     
     // 레이아웃 전환
     const fullPanel = document.getElementById('fullPanelContainer');
@@ -33,9 +36,101 @@ App.evaluation = {
     
     // AI 평가 결과 생성 (시뮬레이션)
     setTimeout(() => {
-      this.generateResult();
-      App.utils.showNotification('AI 평가가 완료되었습니다.');
+      let html = this.generateResult();
+
+      const evaluationContent = document.getElementById('evaluationContent');
+      if (evaluationContent) {
+        evaluationContent.innerHTML = html; // 화면 출력
+      }
+
+      const sections = document.querySelectorAll('#evaluationContent .evaluation-section');
+      const parsedEvaluation = [];
+
+      sections.forEach(section => {
+        const title = section.querySelector('h4')?.innerText.trim();
+        const score = section.querySelector('.score')?.innerText.trim() || null;
+        const items = [...section.querySelectorAll('li')].map(li => li.innerText.trim());
+        const paragraph = section.querySelector('p')?.innerText.trim() || null;
+
+        parsedEvaluation.push({
+          title,
+          score,
+          paragraph,
+          items
+        });
+      });
+
+      const jsonString = JSON.stringify(parsedEvaluation);
+      parsedResult['content'] = jsonString;
+
+      fetch('/assist/insert_evaluation_result/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify(parsedResult)
+      })
+      .then(response => {
+        if(!response.ok) {
+          throw new Error('서버 응답 오류');
+        }
+      })
+      .then(data => {
+        console.log('서버 응답: ', data);
+        App.utils.showNotification('AI 평가가 완료되었습니다.');
+      })
+      .catch(error => {
+        console.error("저장 중 오류 발생:", error);
+        App.utils.showNotification('저장 중 오류가 발생했습니다.');
+      })
+     
     }, 2000);
+
+  },
+
+  parseDraftContent(draftText) {
+    const sections = {
+      '발명의 명칭': 'tech_name',
+      '기술분야': 'tech_description',
+      '배경기술': null,
+      '해결하려는 과제': 'problem_solved',
+      '과제의 해결 수단': 'tech_differentation',
+      '활용 분야': 'application_field',
+      '발명의 효과': null,
+      '발명을 실시하기 위한 구체적인 내용': null,
+      '주요 구성 요소': 'components_functions',
+      '구현 방식': 'implementation_example',
+      '특허청구범위': null,
+      '도면의 간단한 설명': 'drawing_description',
+      '출원인': 'application_info',
+      '발명자': 'inventor_info'
+    }
+
+    const lines = draftText.split('\n');
+    const result = {};
+
+    let currentKey = null;
+    let currentContent = [];
+
+    for(let line of lines) {
+      const headingMatch = line.match(/^#{1,3}\s*(.+)$/);
+      if(headingMatch) {
+        const title = headingMatch[1].trim();
+        if(sections.hasOwnProperty(title)) {
+          if(currentKey=="발명의 명칭") {
+            result['tech_title'] = currentContent.join('\n').trim();
+          }
+          if(currentKey && sections[currentKey]) {
+            result[sections[currentKey]] = currentContent.join('\n').trim();
+          }
+          currentKey = title;
+          currentContent = [];
+        }
+      } else if(line.trim() && currentKey) {
+        currentContent.push(line);
+      }
+    }
   },
   
   // AI 평가 결과 생성
@@ -101,8 +196,8 @@ App.evaluation = {
         </ul>
       </div>
     `;
-    
-    evaluationContent.innerHTML = evaluationHTML;
+
+    return evaluationHTML;
   },
   
   // 평가 기준별 점수 계산 (실제 구현 시 사용)
@@ -177,5 +272,84 @@ App.evaluation = {
     if (content.includes('발명자')) score += 1;
     
     return Math.min(score, 10);
+  },
+
+  showRecommendationButtons() {
+    const container = document.getElementById("after-eval");
+
+    const panelTitle = document.querySelector('.panel-title');
+    if (panelTitle) {
+      panelTitle.textContent = '재작성된 보고서 초안';
+    }
+
+    const draftContent = document.getElementById('draftContent');
+    const evaluateContent = document.getElementById('evaluationContent');
+    if (!originalEvaluationHTML) {
+      originalEvaluationHTML = evaluateContent.innerHTML;
+    }
+    if (!container) return;
+
+    // 기존 버튼들 제거
+    container.innerHTML = "";
+    evaluateContent.innerHTML = "";
+
+    if (draftContent ) {
+      const markdownDiv = draftContent.querySelector('.markdown-content');
+      if (markdownDiv) {
+        evaluateContent.innerHTML = markdownDiv.innerHTML;
+        evaluateContent.style.color = '#FF5A5A';
+      }
+    }
+
+    // 반영 버튼
+    const applyBtn = document.createElement("button");
+    applyBtn.className = "btn btn-primary";
+    applyBtn.innerText = "반영";
+    applyBtn.onclick = function () {
+      App.draft.applyRecommendation();
+    };
+
+    // 재추천 버튼
+    const reRecommendBtn = document.createElement("button");
+    reRecommendBtn.className = "btn btn-warning";
+    reRecommendBtn.innerText = "재추천";
+    reRecommendBtn.onclick = function () {
+      App.draft.retryRecommendation();
+    };
+
+    // 취소 버튼
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn btn-secondary";
+    cancelBtn.innerText = "취소";
+    cancelBtn.onclick = function () {
+      App.evaluation.restoreInitialButtons();
+    };
+
+    // 버튼 추가
+    container.appendChild(applyBtn);
+    container.appendChild(reRecommendBtn);
+    container.appendChild(cancelBtn);
+  },
+
+  restoreInitialButtons() {
+    const container = document.getElementById("after-eval");
+    const evaluateContent = document.getElementById('evaluationContent');
+    const panelTitle = document.querySelector('.panel-title');
+
+    if (!container) return;
+
+    if (evaluateContent) {
+      evaluateContent.innerHTML = originalEvaluationHTML;
+      evaluateContent.style.color = "";  // 원래 색상으로 초기화
+    }
+
+    if (panelTitle) {
+      panelTitle.textContent = '초안에 대한 평가';
+    }
+
+    container.innerHTML = `
+      <button type="button" class="btn btn-secondary" onclick="App.navigation.backToNormal()">취소</button>
+      <button type="button" class="btn btn-success" onclick="App.evaluation.showRecommendationButtons()">추천</button>
+    `;
   }
 };

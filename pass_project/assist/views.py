@@ -1,11 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.db.models.functions import Substr, Cast
+from django.db.models import IntegerField
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
+from django.conf import settings
 from .forms import TemplateForm
-from core.models import Template, Draft
+from core.models import Template, Draft, User, Evaluation
 from django.template.loader import get_template
-from xhtml2pdf import pisa
+from weasyprint import HTML, CSS
 from docx import Document
+from bs4 import BeautifulSoup
+from io import BytesIO
+import os
 import json
 
 # Mock AI 함수 (FastAPI로 교체 예정)
@@ -94,129 +102,240 @@ def mock_ai_generate_draft(template_data):
     return draft_content
 
 def editor_view(request):
-    if request.method == 'POST':
-        # 템플릿 → 초안 생성 (AJAX 요청 처리)
-        if request.headers.get('Content-Type') == 'application/json':
-            try:
-                data = json.loads(request.body)
+    return render(request, 'assist/editor.html')
+    # if request.method == 'POST':
+    #     # 템플릿 → 초안 생성 (AJAX 요청 처리)
+    #     if request.headers.get('Content-Type') == 'application/json':
+    #         try:
+    #             data = json.loads(request.body)
                 
-                # Template 저장
-                template = Template(
-                    user_code=request.user if request.user.is_authenticated else None,
-                    tech_name=data.get('tech_name', ''),
-                    tech_description=data.get('tech_description', ''),
-                    problem_solved=data.get('problem_solved', ''),
-                    tech_differentiation=data.get('tech_differentiation', ''),
-                    application_field=data.get('application_field', ''),
-                    components_functions=data.get('components_functions', ''),
-                    implementation_example=data.get('implementation_example', ''),
-                    drawing_description=data.get('drawing_description', ''),
-                    application_info=data.get('applicant_name', '') + ', ' + 
-                                   data.get('applicant_nationality', '') + ', ' + 
-                                   data.get('applicant_address', ''),
-                    inventor_info=data.get('inventor_name', '') + ', ' + 
-                                data.get('inventor_nationality', '') + ', ' + 
-                                data.get('inventor_address', ''),
-                    template_title=data.get('tech_name', '')[:50],
-                    date=timezone.now()
-                )
-                template.save()
+    #             # Template 저장
+    #             template = Template(
+    #                 user_code=request.user if request.user.is_authenticated else None,
+    #                 tech_name=data.get('tech_name', ''),
+    #                 tech_description=data.get('tech_description', ''),
+    #                 problem_solved=data.get('problem_solved', ''),
+    #                 tech_differentiation=data.get('tech_differentiation', ''),
+    #                 application_field=data.get('application_field', ''),
+    #                 components_functions=data.get('components_functions', ''),
+    #                 implementation_example=data.get('implementation_example', ''),
+    #                 drawing_description=data.get('drawing_description', ''),
+    #                 application_info=data.get('applicant_name', '') + ', ' + 
+    #                                data.get('applicant_nationality', '') + ', ' + 
+    #                                data.get('applicant_address', ''),
+    #                 inventor_info=data.get('inventor_name', '') + ', ' + 
+    #                             data.get('inventor_nationality', '') + ', ' + 
+    #                             data.get('inventor_address', ''),
+    #                 template_title=data.get('tech_name', '')[:50],
+    #                 date=timezone.now()
+    #             )
+    #             template.save()
 
-                # AI로 초안 생성
-                draft_content = mock_ai_generate_draft(data)
+    #             # AI로 초안 생성
+    #             draft_content = mock_ai_generate_draft(data)
                 
-                # Draft 저장
-                draft = Draft.objects.create(
-                    template_id=template,
-                    draft_name=f"{template.tech_name}_draft",
-                    create_draft=draft_content,
-                    create_time=timezone.now()
-                )
+    #             # Draft 저장
+    #             draft = Draft.objects.create(
+    #                 template_id=template,
+    #                 draft_name=f"{template.tech_name}_draft",
+    #                 create_draft=draft_content,
+    #                 create_time=timezone.now()
+    #             )
                 
-                return JsonResponse({
-                    'success': True,
-                    'draft_content': draft_content,
-                    'draft_id': draft.draft_id,
-                    'message': '특허 초안이 성공적으로 생성되었습니다.'
-                })
+    #             return JsonResponse({
+    #                 'success': True,
+    #                 'draft_content': draft_content,
+    #                 'draft_id': draft.draft_id,
+    #                 'message': '특허 초안이 성공적으로 생성되었습니다.'
+    #             })
                 
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'error': str(e),
-                    'message': '초안 생성 중 오류가 발생했습니다.'
-                })
+    #         except Exception as e:
+    #             return JsonResponse({
+    #                 'success': False,
+    #                 'error': str(e),
+    #                 'message': '초안 생성 중 오류가 발생했습니다.'
+    #             })
         
-        # 기존 폼 처리 (하위 호환성)
-        elif 'submit_template' in request.POST:
-            form = TemplateForm(request.POST)
-            if form.is_valid():
-                template = form.save(commit=False)
-                if request.user.is_authenticated:
-                    template.user_code = request.user
-                template.date = timezone.now()
-                template.save()
+    #     # 기존 폼 처리 (하위 호환성)
+    #     elif 'submit_template' in request.POST:
+    #         form = TemplateForm(request.POST)
+    #         if form.is_valid():
+    #             template = form.save(commit=False)
+    #             if request.user.is_authenticated:
+    #                 template.user_code = request.user
+    #             template.date = timezone.now()
+    #             template.save()
 
-                # 기존 로직으로 초안 생성
-                template_data = {
-                    'tech_name': template.tech_name,
-                    'tech_description': template.tech_description,
-                    'problem_solved': template.problem_solved,
-                    'tech_differentiation': template.tech_differentiation,
-                    'application_field': template.application_field,
-                    'components_functions': template.components_functions,
-                    'implementation_example': template.implementation_example,
-                    'drawing_description': template.drawing_description,
-                    'application_info': template.application_info,
-                    'inventor_info': template.inventor_info,
-                }
+    #             # 기존 로직으로 초안 생성
+    #             template_data = {
+    #                 'tech_name': template.tech_name,
+    #                 'tech_description': template.tech_description,
+    #                 'problem_solved': template.problem_solved,
+    #                 'tech_differentiation': template.tech_differentiation,
+    #                 'application_field': template.application_field,
+    #                 'components_functions': template.components_functions,
+    #                 'implementation_example': template.implementation_example,
+    #                 'drawing_description': template.drawing_description,
+    #                 'application_info': template.application_info,
+    #                 'inventor_info': template.inventor_info,
+    #             }
                 
-                draft_content = mock_ai_generate_draft(template_data)
+    #             draft_content = mock_ai_generate_draft(template_data)
                 
-                draft = Draft.objects.create(
-                    template_id=template,
-                    draft_name=f"{template.tech_name}_draft",
-                    create_draft=draft_content,
-                    create_time=timezone.now()
-                )
-                return redirect('assist:editor')
+    #             draft = Draft.objects.create(
+    #                 template_id=template,
+    #                 draft_name=f"{template.tech_name}_draft",
+    #                 create_draft=draft_content,
+    #                 create_time=timezone.now()
+    #             )
+    #             return redirect('assist:editor')
 
-        # 직접 수정 저장
-        elif 'save_draft' in request.POST:
-            draft_id = request.POST.get('draft_id')
-            new_text = request.POST.get('draft_text')
-            draft = Draft.objects.get(draft_id=draft_id)
-            draft.create_draft = new_text
-            draft.save()
+    #     # 직접 수정 저장
+    #     elif 'save_draft' in request.POST:
+    #         draft_id = request.POST.get('draft_id')
+    #         new_text = request.POST.get('draft_text')
+    #         draft = Draft.objects.get(draft_id=draft_id)
+    #         draft.create_draft = new_text
+    #         draft.save()
 
-        # AI 수정
-        elif 'ai_edit' in request.POST:
-            draft_id = request.POST.get('draft_id')
-            prompt = request.POST.get('prompt')
-            draft = Draft.objects.get(draft_id=draft_id)
-            draft.create_draft = mock_ai_edit(draft.create_draft, prompt)
-            draft.save()
+    #     # AI 수정
+    #     elif 'ai_edit' in request.POST:
+    #         draft_id = request.POST.get('draft_id')
+    #         prompt = request.POST.get('prompt')
+    #         draft = Draft.objects.get(draft_id=draft_id)
+    #         draft.create_draft = mock_ai_edit(draft.create_draft, prompt)
+    #         draft.save()
 
-        # AI 평가
-        elif 'ai_evaluate' in request.POST:
-            draft_id = request.POST.get('draft_id')
-            draft = Draft.objects.get(draft_id=draft_id)
-            request.session['ai_feedback'] = mock_ai_evaluate(draft.create_draft)
-            request.session['active_draft'] = draft.draft_id
+    #     # AI 평가
+    #     elif 'ai_evaluate' in request.POST:
+    #         draft_id = request.POST.get('draft_id')
+    #         draft = Draft.objects.get(draft_id=draft_id)
+    #         request.session['ai_feedback'] = mock_ai_evaluate(draft.create_draft)
+    #         request.session['active_draft'] = draft.draft_id
 
-        return redirect('assist:editor')
+    #     return redirect('assist:editor')
 
-    # GET 요청 처리
-    template = Template.objects.last()
-    draft = Draft.objects.last()
-    feedback = request.session.pop('ai_feedback', None) if draft else None
+    # # GET 요청 처리
+    # template = Template.objects.last()
+    # draft = Draft.objects.last()
+    # feedback = request.session.pop('ai_feedback', None) if draft else None
     
-    return render(request, 'assist/editor.html', {
-        'form': TemplateForm(),
-        'template': template,
-        'draft': draft,
-        'feedback': feedback
-    })
+    # return render(request, 'assist/editor.html', {
+    #     'form': TemplateForm(),
+    #     'template': template,
+    #     'draft': draft,
+    #     'feedback': feedback
+    # })
+
+@csrf_exempt
+def insert_patent_report(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        # user 테이블 연동
+        users = User.objects.all()
+
+        if data['sc_flag'] == 'create':
+            try:
+                with transaction.atomic():
+                    template = Template.objects.create(
+                        tech_name=data.get("tech_name"),
+                        tech_description=data.get("tech_description"),
+                        problem_solved=data.get("problem_solved"),
+                        tech_differentiation=data.get("tech_differentation", "tech_differentiation"),
+                        application_field=data.get("application_field"),
+                        components_functions=data.get("components_functions"),
+                        implementation_example=data.get("implementation_example"),
+                        drawing_description=data.get("drawing_description"),
+                        application_info=data.get("application_info", "applicant_info"),
+                        inventor_info=data.get("inventor_info", "inventors"),
+                        date=timezone.now(),
+                        template_title=data.get("tech_name")
+                    )
+
+                    draft = Draft.objects.create(
+                        draft_name = data.get("tech_name"),
+                        draft_title = data.get("tech_name"),
+                        version = data.get("version"),
+                        template_id = template.template_id,
+                        create_draft = data.get("create_draft"),
+                        create_time = timezone.now()
+                    )
+                    
+                    return JsonResponse({'status': "success", 'message': '저장 완료', 'template_id': template.template_id, 'draft_id': draft.draft_id})
+            except Exception as e:
+                return JsonResponse({"status": 'error', 'message': str(e)})
+        elif data['sc_flag'] == 'update':
+            try:
+                drafts = Draft.objects.filter(template_id=data['template_id'])
+
+                if not drafts:
+                    return JsonResponse({'status': 'error', 'message': 'No drafts found[404]'}, status=404)
+                
+                latest_draft = sorted(drafts, key=lambda d: int(d.version[1:]), reverse=True)[0]
+
+                draft_obj = {}
+                for key, value in latest_draft.__dict__.items():
+                    if not key.startswith('_'):  # _state 등 내부 속성 제외
+                        draft_obj[key] = value
+                
+                if str(draft_obj.get("create_draft")) == str(data['create_draft']):
+                    return JsonResponse({'status': 'error', 'meassge': "수정 내용이 없습니다."})
+                
+                print("before::", draft_obj.get("version"))
+
+                version = str(draft_obj.get("version")).replace("v", "").strip()
+                print("number::", version)
+                latest_version = f"v{int(version) + 1}"
+
+                draft_obj['version'] = latest_version
+
+                print(draft_obj.get("version"))
+
+                draft = Draft.objects.create(
+                    draft_name = draft_obj.get("draft_name"), # 기존거 넣어야함..
+                    draft_title = data.get("tech_name"),
+                    version = draft_obj.get("version"),
+                    template_id = draft_obj.get("template_id"),
+                    create_draft = data.get("create_draft"),
+                    create_time = timezone.now()
+                )
+                return JsonResponse({'status': "success", 'message': '저장 완료', 'draft_id': draft.draft_id})
+            except Exception as e:
+                print("?")
+                return JsonResponse({"status": 'error', 'message': str(e)})
+        
+    return JsonResponse({'status': 'error', "message": "Invalid request [400]"})
+
+@csrf_exempt
+def insert_evaluation_result(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        tech_title = data.get("tech_title")
+        try:
+            template = Template.objects.get(template_title=tech_title)
+
+            latest_version = Draft.objects.filter(template_id=template.template_id).annotate(version_number=Cast(Substr('version', 2), IntegerField())).order_by('-version_number').first()
+            
+            if latest_version is not None:
+                draft = Draft.objects.get(template_id=template.template_id, version=latest_version.__dict__.get("version"))
+                draft_id = draft.__dict__.get("draft_id")
+                
+                evaluation_exist = Evaluation.objects.filter(draft_id=draft_id).first()
+
+                if evaluation_exist:
+                    JsonResponse({'status': 'success', 'message': '이미 데이터가 존재하므로 따로 동작하지 않습니다.'})
+                else:
+                    evaluation = Evaluation.objects.create(
+                        content = data.get('content'),
+                        created_at = timezone.now(),
+                        draft_id = draft_id
+                    )
+                return JsonResponse({'status': 'success', 'message': '평가 정보가 저장되었습니다.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Draft not found [404]'})
+        except Template.DoesNotExist:
+            return JsonResponse({'status':'error', 'message': 'Template not found'})
+    return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
 
 def qa_view(request):
     """AI Q&A 페이지"""
@@ -279,36 +398,144 @@ def mock_qa_answer(question):
     <p>더 구체적인 질문을 해주시면 더 정확한 답변을 제공할 수 있습니다.</p>
     """)
 
-# PDF 및 DOCX, HWP 다운로드 (기존 유지)
 def download_pdf(request, draft_id):
+    data = json.loads(request.body)
     draft = get_object_or_404(Draft, draft_id=draft_id)
-    template = get_template('assist/draft_pdf_template.html')  # 경로 수정
-    html = template.render({'draft': draft})
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.pdf"'
-    pisa.CreatePDF(html, dest=response)
+    
+    # html_content = markdown.markdown(draft.create_draft, extensions=['fenced_code', 'codehilite'])
+    html_content = data.get("html")
+    template = get_template('assist/includes/draft_pdf_template.html')
+    html = template.render({'draft': draft, 'create_draft_html': html_content})
+
+    font_path = os.path.join(settings.BASE_DIR, 'assist', 'static', 'assist', 'fonts', 'malgun.ttf')
+
+    css = CSS(string=f'''
+        @font-face {{
+              font-family: 'MalgunGothic';
+              src: url('file:///{font_path.replace(os.sep,"/")}');
+        }}
+        body {{
+            font-family: 'MalgunGothic';
+            font-size: 12pt;
+            line-height: 1.6;
+        }}
+        h1, h2, h3, h4 {{
+            font-weigth: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }}
+        p {{
+            margin: 5px 0;
+        }}
+        code {{
+            font-family: monospace;
+            background-color: #f2f2f2;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }}
+        pre {{
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-left: 4px solid #ccc;
+            overflow-x: auto;
+        }}
+        ul, ol {{
+            margin-left: 20px;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }}
+        th, td {{
+            border: 1px solid #ccc;
+            padding: 8px;
+        }}
+        blockquote {{
+            border-left: 4px solid #ccc;
+            padding-left: 10px;
+            color: #666;
+            margin: 10px 0;
+        }}
+    ''')
+
+    pdf_file = HTML(string=html).write_pdf(stylesheets=[css])
+    
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.pdf"'
     return response
+
+# from xhtml2pdf import pisa
+# from xhtml2pdf.default import DEFAULT_FONT
+# from reportlab.pdfbase import pdfmetrics
+# from reportlab.pdfbase.ttfonts import TTFont
+# from reportlab.lib.fonts import addMapping
+# def download_pdf(request, draft_id):
+#     draft = get_object_or_404(Draft, draft_id=draft_id)
+#     template = get_template('assist\includes\draft_pdf_template.html')  # 경로 수정
+#     html_content = markdown.markdown(draft.__dict__['create_draft'])
+
+#     font_path = os.path.join(settings.BASE_DIR, 'assist', 'static', 'assist', 'fonts', 'malgun.ttf')
+#     font_url = f'file://{font_path.replace(os.sep, "/")}'
+#     html = template.render({'draft': draft, 'create_draft_html': html_content, 'font_path': font_url})
+
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__['draft_title']}.pdf"'
+#     pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=response, encoding='utf-8')
+#     return response
 
 def download_docx(request, draft_id):
+    data = json.loads(request.body)
     draft = get_object_or_404(Draft, draft_id=draft_id)
-    document = Document()
-    document.add_heading(draft.draft_name, level=1)
-    document.add_paragraph(draft.create_draft)
+    html_content = data.get("html")
+    print(html_content)
+
+    soup = BeautifulSoup(html_content, "html.parser")
+    doc = Document()
+
+    for elem in soup.find_all(['p', 'h1', 'h2', 'ul', 'ol', 'li']):
+        if elem.name == "p":
+            doc.add_paragraph(elem.get_text())
+        elif elem.name == "h1":
+            doc.add_heading(elem.get_text(), level=1)
+        elif elem.name == 'h2':
+            doc.add_heading(elem.get_text(), level=2)
+        elif elem.name in ['ul', 'ol']:
+            for li in elem.find_all('li'):
+                doc.add_paragraph(li.get_text(), style="ListBullet")
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
 
     response = HttpResponse(
+        buffer.read(),
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
-    response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.docx"'
-    document.save(response)
+    response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.docx"'
     return response
+
+# from docx import Document
+# def download_docx(request, draft_id):
+#     draft = get_object_or_404(Draft, draft_id=draft_id)
+#     document = Document()
+#     document.add_heading(draft.draft_name, level=1)
+#     document.add_paragraph(draft.create_draft)
+
+#     response = HttpResponse(
+#         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+#     )
+#     response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.docx"'
+#     document.save(response)
+#     return response
 
 def download_hwp(request, draft_id):
     """HWP 다운로드 (현재는 텍스트 파일로 대체)"""
     draft = get_object_or_404(Draft, draft_id=draft_id)
     
     # HWP 라이브러리가 없으므로 텍스트 파일로 대체
-    content = f"{draft.draft_name}\n\n{draft.create_draft}"
+    content = f"{draft.__dict__["draft_name"]}\n\n{draft.__dict__["create_draft"]}"
     
     response = HttpResponse(content, content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.txt"'
+    response['Content-Disposition'] = f'attachment; filename="{draft.__dict__["draft_title"]}.txt"'
     return response

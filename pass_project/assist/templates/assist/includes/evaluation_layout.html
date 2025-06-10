@@ -18,9 +18,9 @@
         <!-- AI 평가 결과가 여기에 표시됩니다 -->
       </div>
       
-      <div class="button-row">
-        <button type="button" class="btn btn-secondary" onclick="App.navigation.backToNormal()">돌아가기</button>
-        <button type="button" class="btn btn-success" onclick="App.draft.save()">저장</button>
+      <div class="button-row" id="after-eval">
+        <button type="button" class="btn btn-secondary" onclick="App.navigation.backToNormal()">취소</button>
+        <button type="button" class="btn btn-success" onclick="App.evaluation.showRecommendationButtons()">추천</button>
       </div>
     </div>
   </div>

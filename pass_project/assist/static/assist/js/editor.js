@@ -293,7 +293,7 @@ const InventorManager = {
     
     const newNum = currentCount + 1;
     container.insertAdjacentHTML('beforeend', this.createInventorHTML(newNum));
-    Utils.showNotification(`발명자 ${newNum}이 추가되었습니다.`);
+    //Utils.showNotification(`발명자 ${newNum}이 추가되었습니다.`);
   },
 
   remove(inventorNum) {
@@ -301,7 +301,7 @@ const InventorManager = {
     if (item) {
       item.remove();
       this.reorder();
-      Utils.showNotification('발명자가 제거되었습니다.');
+      // Utils.showNotification('발명자가 제거되었습니다.');
     }
   },
 
@@ -589,7 +589,7 @@ const HistoryManager = {
     
     AppState.historyData.myHistory.unshift(newItem);
     this.renderMyHistory();
-    Utils.showNotification('히스토리에 저장되었습니다.');
+    //Utils.showNotification('히스토리에 저장되었습니다.');
   },
 
   renderMyHistory() {
@@ -680,13 +680,13 @@ const ApplicantManager = {
     if (applicantType === 'corporation') {
       corporationInfo.style.display = 'block';
       individualInfo.style.display = 'none';
-      this.setRequired(corporationInfo, true);
-      this.setRequired(individualInfo, false);
+      ApplicantManager.setRequired(corporationInfo, true);
+      ApplicantManager.setRequired(individualInfo, false);
     } else {
       corporationInfo.style.display = 'none';
       individualInfo.style.display = 'block';
-      this.setRequired(individualInfo, true);
-      this.setRequired(corporationInfo, false);
+      ApplicantManager.setRequired(individualInfo, true);
+      ApplicantManager.setRequired(corporationInfo, false);
     }
   },
 

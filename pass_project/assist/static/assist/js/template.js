@@ -1,8 +1,19 @@
 // 템플릿 관리 전용 모듈
 (function() {
   'use strict';
+
+  const buttons = document.querySelectorAll(
+    '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+  );
+
+  window.addEventListener('DOMContentLoaded', ()=> {
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+  });
   
   let inventorCount = 1;
+  window.CURRENT_TEMPLATE_ID = null;
   
   // 전역 변수 초기화
   if (typeof window.currentDraftContent === 'undefined') {
@@ -194,6 +205,43 @@
     return data;
   }
 
+  // db 저장 로직 추가
+  function saveTemplates(formData) {
+    fetch('/assist/insert_patent_report/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+      if(!response.ok) {
+        throw new Error('서버 응답 오류');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('서버 응답:',data);
+      window.CURRENT_TEMPLATE_ID = data.template_id;
+      App.data.currentDraftId = data.draft_id;
+      App.utils.showNotification(`특허명세서로 변환 되었습니다.`);
+
+      const buttons = document.querySelectorAll(
+        '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+      );
+
+      buttons.forEach(button => {
+        button.classList.add('dynamic-hover');
+        button.disabled = false;
+      });
+    })
+    .catch(error => {
+      console.error('저장 중 오류 발생:', error);
+      App.utils.showNotification('저장 중 오류가 발생했습니다.');
+    })
+  }
+
   function getVal(id) {
     return document.getElementById(id)?.value || '';
   }
@@ -253,6 +301,10 @@
   // Draft 생성 (다른 모듈 활용)
   function generateDraft(formData) {
     const content = createContent(formData);
+
+    formData['sc_flag'] = 'create';
+    formData['version'] = 'v0';
+    formData['create_draft'] = content;
     
     window.currentDraftContent = content;
     if (App.data) App.data.currentDraftContent = content;
@@ -264,6 +316,8 @@
       showSimpleDraft(content);
     }
     
+    saveTemplates(formData);
+
     // 히스토리에 추가
     if (App.history?.addToHistory) {
       App.history.addToHistory(formData.tech_name);
@@ -308,6 +362,8 @@ ${data.problem_solved}
 ## 과제의 해결 수단
 ${data.tech_differentiation}
 
+${data.application_field ? `\n## 활용 분야\n${data.application_field}\n` : ''}
+
 ## 발명의 효과
 본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
 - 성능 향상: 기존 기술 대비 현저히 향상된 성능 및 효율성
@@ -322,6 +378,8 @@ ${data.components_functions}
 ### 구현 방식
 ${data.implementation_example}
 
+${data.drawing_description ? `\n### 도면의 간단한 설명\n${data.drawing_description}\n` : ''}
+
 ## 특허청구범위
 **청구항 1**: ${title}에 있어서, 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
 
@@ -332,7 +390,7 @@ ${data.applicant_info.type === 'corporation' ?
   `**성명**: ${data.applicant_info.name}`}
 
 ### 발명자
-${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name}`).join('\n')}`;
+${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name} **주소**: ${inv.address}`).join('\n')}`;
   }
 
   // 출원인 구분 토글
