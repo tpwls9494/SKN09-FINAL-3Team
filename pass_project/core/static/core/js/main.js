@@ -15,10 +15,3 @@ function goToAIqapage() {
 
   window.location.href = "http://127.0.0.1:8000/2";  // 원하는 주소로 수정  
 }
-
-// function goToLoginpage() {
-//   console.log("✅ goToLoginpage() 실행됨");
-
-//   window.location.href = "http://127.0.0.1:8000/accounts/login/";  // 원하는 주소로 수정
-// }
-

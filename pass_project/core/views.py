@@ -1,10 +1,11 @@
 from django.shortcuts import render
 
+
 def main_view(request):
     """
     flag = 1  → 비로그인
-    flag = 2  → 관리자(is_superuser==0)
-    flag = 3  → 일반 사용자(is_superuser==1)
+    flag = 2  → 관리자(is_superuser==1)
+    flag = 3  → 일반 사용자(is_superuser==0)
     """
     flag = 1
     username = ""

@@ -32,13 +32,13 @@ body {
   align-items: center;
   cursor: pointer;
   margin-right: 200px;            /* 로고–첫 메뉴 간 간격 */
-  font-size: 20px;
+  font-size: 25px;
   font-weight: 1000;
 }
 
 .logo img {
   height: 50px;
-  margin-right: 10px;
+  margin-right: 40px;
 }
 
 .navbar nav {
