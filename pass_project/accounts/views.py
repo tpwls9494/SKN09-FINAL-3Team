@@ -451,8 +451,36 @@ def get_prev_login_user(request):
 # 6) 로그아웃 뷰
 # ───────────────────────────────────────────────────────────
 
+# def logout_view(request):
+#     if request.user.is_authenticated:
+#         try:
+#             log = LoginLog.objects.filter(user_code=request.user).latest('login_time')
+#             if not log.logout_time:
+#                 log.logout_time = timezone.now()
+#                 log.save()
+#         except LoginLog.DoesNotExist:
+#             pass
+#         auth_logout(request)
+#     return redirect('accounts:login')
+
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils import timezone
+from django.contrib.auth import logout as auth_logout
+
+# … (중략) …
+
 def logout_view(request):
+    """
+    1) 가장 최근 LoginLog의 logout_time을 채우고
+    2) 세션을 끊은 뒤
+    3) 이전에 로그인했던 권한(role)에 따라 메인 페이지로 리다이렉트
+    """
+    was_admin = False
     if request.user.is_authenticated:
+        # 로그아웃 전 관리자 여부 저장
+        was_admin = request.user.is_superuser == 1
+        # 로그아웃 시간 기록
         try:
             log = LoginLog.objects.filter(user_code=request.user).latest('login_time')
             if not log.logout_time:
@@ -460,8 +488,14 @@ def logout_view(request):
                 log.save()
         except LoginLog.DoesNotExist:
             pass
+        # 실제 로그아웃
         auth_logout(request)
-    return redirect('accounts:login')
+
+    # role 파라미터 결정 (관리자면 admin, 아니면 user)
+    role = 'admin' if was_admin else 'user'
+    return redirect(f"{reverse('core:main')}?role={role}")
+
+
 
 # ───────────────────────────────────────────────────────────
 # 7) 비밀번호 재설정 외 기타 뷰
