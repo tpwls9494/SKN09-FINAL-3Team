@@ -36,7 +36,7 @@ App.draft = {
       if (editButtons) editButtons.style.display = 'none';
     }
     
-    App.utils.showNotification('📄 특허 명세서 초안이 마크다운 형식으로 생성되었습니다.');
+    App.utils.showNotification('특허 명세서 초안이 마크다운 형식으로 생성되었습니다.');
   },
   
   // 저장 기능
@@ -51,6 +51,18 @@ App.draft = {
       App.utils.showNotification('저장할 내용이 없습니다.');
       return;
     }
+
+    if (window.CURRENT_TEMPLATE_ID == null) {
+      alert('template_id가 없습니다.');
+      return;
+    }
+
+    console.log("template_id::", window.CURRENT_TEMPLATE_ID);
+
+    let parsedResult = App.draft.parseDraftContent(App.data.currentDraftContent);
+    parsedResult['sc_flag'] = 'update';
+    parsedResult['create_draft'] = App.data.currentDraftContent;
+    parsedResult['template_id'] = window.CURRENT_TEMPLATE_ID;
     
     const now = new Date();
     const timestamp = now.getFullYear() + '-' + 
@@ -58,8 +70,86 @@ App.draft = {
       String(now.getDate()).padStart(2, '0') + '_' + 
       String(now.getHours()).padStart(2, '0') + ':' + 
       String(now.getMinutes()).padStart(2, '0');
+
+    fetch('/assist/insert_patent_report/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': App.draft.getCSRFToken(),
+      },
+      body: JSON.stringify(parsedResult)
+    })
+    .then(response => {
+      if(!response.ok) {
+        throw new Error('서버 응답 오류');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('서버 응답:',data);
+      if(data.status == "error") {
+        let errorMsg = data.message;
+        App.utils.showNotification(errorMsg);
+      } else {
+        App.data.currentDraftId = data.draft_id;
+        App.utils.showNotification(`특허명세서_${timestamp}로 저장되었습니다.`);
+      }
+    })
+    .catch(error => {
+      console.error('저장 중 오류 발생:', error);
+      App.utils.showNotification('저장 중 오류가 발생했습니다.');
+    })
     
-    App.utils.showNotification(`💾 특허명세서_${timestamp}로 저장되었습니다.`);
+  },
+
+  parseDraftContent(draftText) {
+    const sections = {
+      '발명의 명칭': 'tech_name',
+      '기술분야': 'tech_description',
+      '배경기술': null,
+      '해결하려는 과제': 'problem_solved',
+      '과제의 해결 수단': 'tech_differentation',
+      '활용 분야': 'application_field',
+      '발명의 효과': null,
+      '발명을 실시하기 위한 구체적인 내용': null,
+      '주요 구성 요소': 'components_functions',
+      '구현 방식': 'implementation_example',
+      '특허청구범위': null,
+      '도면의 간단한 설명': 'drawing_description',
+      '출원인': 'application_info',
+      '발명자': 'inventor_info'
+    }
+
+    const lines = draftText.split('\n');
+    const result = {};
+
+    let currentKey = null;
+    let currentContent = [];
+
+    for(let line of lines) {
+      const headingMatch = line.match(/^#{1,3}\s*(.+)$/);
+      if(headingMatch) {
+        const title = headingMatch[1].trim();
+        if(sections.hasOwnProperty(title)) {
+          if(currentKey=="발명의 명칭") {
+            result['tech_title'] = currentContent.join('\n').trim();
+          }
+          if(currentKey && sections[currentKey]) {
+            result[sections[currentKey]] = currentContent.join('\n').trim();
+          }
+          currentKey = title;
+          currentContent = [];
+        }
+      } else if(line.trim() && currentKey) {
+        currentContent.push(line);
+      }
+    }
+
+    if(currentKey && sections[currentKey]) {
+      result[sections[currentKey]] = currentContent.join('\n').trim();
+    }
+
+    return result
   },
   
   // 직접 수정 모드 활성화
@@ -88,7 +178,7 @@ App.draft = {
       editButtons.style.display = 'flex';
       
       textarea.focus();
-      App.utils.showNotification('✏️ 수정 모드가 활성화되었습니다. 자유롭게 편집하세요.');
+      App.utils.showNotification('수정 모드가 활성화되었습니다. 자유롭게 편집하세요.');
     }
   },
   
@@ -116,7 +206,7 @@ App.draft = {
       editButtons.style.display = 'none';
       normalButtons.style.display = 'flex';
       
-      App.utils.showNotification('🔄 수정이 취소되었습니다.');
+      App.utils.showNotification('수정이 취소되었습니다.');
     }
   },
   
@@ -147,33 +237,22 @@ App.draft = {
       editButtons.style.display = 'none';
       normalButtons.style.display = 'flex';
       
-      App.utils.showNotification('✅ 수정이 완료되었습니다.');
+      App.utils.showNotification('수정이 완료되었습니다.');
     }
   },
   
   // AI 요청 기능
   requestAI() {
-    const prompt = window.prompt('AI에게 요청할 수정 사항을 입력하세요:\n(예: "청구항을 더 구체적으로 작성해주세요", "기술분야 설명을 보완해주세요")');
-    
-    if (!prompt || !prompt.trim()) return;
-    
-    App.utils.showNotification('AI가 요청사항을 처리 중입니다...');
-    
-    // 시뮬레이션된 AI 응답
-    setTimeout(() => {
-      const responses = [
-        '청구항이 더욱 구체적으로 보완되었습니다.',
-        '기술분야 설명이 상세히 추가되었습니다.',
-        '발명의 효과 부분이 강화되었습니다.',
-        '배경기술 설명이 개선되었습니다.',
-        '특허청구범위가 법적 요건에 맞게 수정되었습니다.'
-      ];
-      
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      App.utils.showNotification(`AI 요청 완료: ${randomResponse}`);
-      
-      // 실제로는 서버 API를 호출하여 AI가 수정한 내용을 받아와야 함
-    }, 2000);
+    const requestAIDiv = document.getElementById("activeRequestAI");
+    if(requestAIDiv.style.display !== "block"){
+        requestAIDiv.style.display = "block";
+        const buttonRowDivs = document.getElementsByClassName('button-row');
+        for (const div of buttonRowDivs) {
+          div.style.paddingTop = "2px";
+        }
+    } else {
+        requestAIDiv.style.display = 'none';
+    }
   },
   
   // 다운로드 기능 (모달 열기)
@@ -210,5 +289,17 @@ App.draft = {
     URL.revokeObjectURL(url);
     
     App.utils.showNotification('특허 명세서가 마크다운 파일로 다운로드되었습니다.');
+  },
+  
+  getCSRFToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for(let cookie of cookies) {
+      const trimmed = cookie.trim();
+      if(trimmed.startsWith(name + '=')) {
+        return trimmed.substring(name.length + 1);
+      }
+    }
+    return '';
   }
 };

@@ -1,16 +1,17 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>{{ draft.draft_name }}</title>
-    <style>
+    <style>        
         @page {
             size: A4;
             margin: 2cm;
         }
         
         body {
-            font-family: 'Malgun Gothic', Arial, sans-serif;
+            font-family: 'MalgunGothic', Arial, sans-serif;
             font-size: 12pt;
             line-height: 1.6;
             color: #333;
@@ -117,7 +118,7 @@
     
     <div class="patent-section">
         {% autoescape off %}
-            {{ draft.create_draft|linebreaks }}
+            {{ create_draft_html }}
         {% endautoescape %}
     </div>
     

@@ -7,7 +7,7 @@
 }
 
 body {
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: #333;
   overflow-x: hidden;
 }
@@ -85,18 +85,40 @@ body {
   cursor: pointer;
   padding: 8px 16px;
   border-radius: 15px;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   color: #333;
+  position: relative;
+  overflow: hidden;
 }
 
 .nav-item.active {
   color: #FFB6C1;
   font-weight: 600;
-  border-radius: 15px;
+  transform: scale(1.05);
+}
+
+#sideToggleBtn {
+  width: 20px;
+  height: 20px;
 }
 
 .nav-item:hover {
   background-color: rgba(255, 105, 180, 0.1);
+  transform: translateY(-1px);
+}
+
+.nav-item.active:hover {
+  background-color: rgba(255, 182, 193, 0.15);
+  transform: scale(1.05) translateY(-1px);
+}
+
+/* 네비게이션 아이템 클릭 효과 */
+.nav-item:active {
+  transform: scale(0.98);
+}
+
+.nav-item.active:active {
+  transform: scale(1.02);
 }
 
 .user-section {
@@ -157,7 +179,8 @@ body {
   transition: padding-top 0.3s ease;
   overflow-x: hidden;
   display: flex;
-  gap: 0;
+  justify-content: center;
+  align-items: center;
 }
 
 .main-container.header-visible {
@@ -180,7 +203,7 @@ body {
 }
 
 .btn-primary {
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: white;
 }
 
@@ -231,7 +254,7 @@ body {
 
 .button-row {
   display: flex;
-  justify-content: center;
+  /* justify-content: center; */
   margin-top: auto;
   padding-top: 20px;
   gap: 15px;
@@ -245,7 +268,7 @@ body {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #1a237e;
+  background-color: #0F1E46;
   color: white;
   padding: 15px 25px;
   border-radius: 25px;
@@ -265,7 +288,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a237e;
+  background: #0F1E46;
   border-radius: 3px;
 }
 

@@ -1,7 +1,8 @@
+{% load static %}
 <!-- 히스토리 패널 (기본적으로 닫혀있음) -->
 <div class="history-panel collapsed" id="historyPanel">
   <div class="history-toggle" onclick="App.history.togglePanel()">
-    <div class="history-icon">📋</div>
+        <img src="{% static 'assist/images/sidebtn2.png' %}" alt="사이드버튼" class="sidebtn1-icon" id="sideToggleBtn">
   </div>
   <div class="history-content" id="historyContent">
     <div class="history-section">
@@ -25,9 +26,19 @@
     
     <div class="new-template-section">
       <button class="new-template-btn" onclick="App.template.createNew()">
-        <span class="btn-icon">📝</span>
         New Template
       </button>
     </div>
   </div>
 </div>
+
+<!-- 이미지 경로를 데이터 속성으로 저장 -->
+<script>
+// 이미지 경로를 전역 변수로 설정
+window.STATIC_IMAGES = {
+    sidebtn1: "{% static 'assist/images/sidebtn1.png' %}",
+    sidebtn2: "{% static 'assist/images/sidebtn2.png' %}",
+    edit: "{% static 'assist/images/edit.png' %}",
+    garbage: "{% static 'assist/images/garbage.png' %}"
+};
+</script>

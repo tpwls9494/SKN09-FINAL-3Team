@@ -149,9 +149,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # (배포 시에 사용)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 AUTH_USER_MODEL = 'core.User'
-
 
 # 브라우저 종료 시 세션 쿠키를 자동으로 삭제하도록 전역 설정
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+

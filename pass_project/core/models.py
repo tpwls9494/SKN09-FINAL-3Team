@@ -7,7 +7,7 @@ import uuid
 class User(AbstractUser):
     user_code = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_nickname = models.CharField(max_length=150, blank=True, null=True)
-    is_auto_login = models.IntegerField(blank=True, null=True)
+    is_auto_login = models.IntegerField(blank=True, null=True)  # 0: 일반 로그인, 1: 자동 로그인
     user_left_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
@@ -43,7 +43,6 @@ class TeamLog(models.Model):
 
     def __str__(self):
         return f'{self.team_id.team_name} - {self.user_code.username}'
-
 
 
 # ✅ 템플릿
