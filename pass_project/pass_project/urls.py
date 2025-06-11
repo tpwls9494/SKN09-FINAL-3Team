@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('core.urls')),                     # 메인 페이지
     path('accounts/', include('accounts.urls')),        # 로그인, 마이페이지
     path('user_admin/', include('user_admin.urls')),    # 관리자 페이지
+    path('assist/', include('assist.urls')),            # 특허 페이지
 
     # path('assist/', include('assist.urls')),  # AI 기능
 ]

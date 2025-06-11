@@ -16,16 +16,16 @@
     <nav>
       <!-- Flag 1: 비로그인 -->
       {% if flag == 1 %}
-        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
-        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+        <a href="accounts/login/" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="accounts/login/" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
 
         <span class="nav-spacer"></span>
         <a href="{% url 'accounts:login' %}" class="action-link login-link">로그인</a>
 
       <!-- Flag 2: 관리자 -->
       {% elif flag == 2 %}
-        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
-        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+        <a href="assist" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="assist/qa" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
 
         <span class="nav-spacer"></span>
         <span class="nav-user">관리자님</span>
@@ -35,8 +35,8 @@
 
       <!-- Flag 3: 일반 사용자 -->
       {% elif flag == 3 %}
-        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
-        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+        <a href="assist" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="assist/qa" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
 
         <span class="nav-spacer"></span>
         <span class="nav-user">{{ username }}님</span>
