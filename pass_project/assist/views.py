@@ -561,3 +561,4 @@ def download_hwp(request, draft_id):
     response = HttpResponse(content, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__["draft_title"]}.txt"'
     return response
+    

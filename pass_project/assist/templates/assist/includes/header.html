@@ -3,7 +3,7 @@
 <div class="hidden-header" id="hiddenHeader">
   <div class="header-content">
     <div class="logo-section">
-      <a href="/main" class="logo-link">
+      <a href="/" class="logo-link">
         <img src="{% static 'assist/images/logo.png' %}" alt="로고" class="logo-icon">
         <div class="logo-text">PASS</div>
       </a>
@@ -15,8 +15,10 @@
     </div>
     
     <div class="user-section">
-      <div class="user-info">
-        <span class="username">rornfl02 님</span>
+      <div class="user-info">  
+        {% if user.is_authenticated %}
+          {{ user.user_nickname }}님 
+        {% endif %}
       </div>
       <div class="user-buttons">
         <button class="user-btn" onclick="App.user.goToMyPage()">마이페이지</button>

@@ -235,14 +235,14 @@ window.App = {
     goToMyPage() {
       App.utils.showNotification('마이페이지로 이동합니다...');
       // 실제로는 마이페이지로 리디렉션
-      // window.location.href = '/mypage';
+      window.location.href = '/accounts/mypage';
     },
     
     logout() {
       if (confirm('로그아웃 하시겠습니까?')) {
         App.utils.showNotification('로그아웃 중입니다...');
         // 실제로는 로그아웃 처리
-        // window.location.href = '/logout';
+        window.location.href = '/accounts/login/';
       }
     }
   }
