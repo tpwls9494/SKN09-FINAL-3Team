@@ -1,5 +1,5 @@
 @font-face {
-    font-family: 'SpoqaHanSans';
+    font-family: 'SpoqaHanSansNeo';
     src: url('/static/accounts/fonts/SpoqaHanSans-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
@@ -33,14 +33,14 @@ body {
 
 #logo-img{
     margin-top: 3px;
-    width: 40px;
-    height: 40px;
+    width: 80px;
+    height: 80px;
     cursor: pointer;
 }
 
 #logo-title {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 26px;
+    font-weight: 1000;
     color: #0F1E46;
 }
 
@@ -266,4 +266,49 @@ input[type="checkbox"]:checked::after {
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+
+
+
+/* 2025/06/10 (화요일) yh - testing */
+/* ── 비활성화 계정 모달 ── */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  background: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+  position: relative;
+  font-family: 'SpoqaHanSansNeo', sans-serif;
+}
+.modal-content .close {
+  position: absolute;
+  right: 16px; top: 12px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* 확인 버튼 */
+#inactive-ok-btn {
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: none;
+  background-color: #0F1E46;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#inactive-ok-btn:hover {
+  opacity: 0.9;
 }

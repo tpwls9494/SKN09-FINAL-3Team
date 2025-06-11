@@ -14,12 +14,40 @@
       <span>PASS</span>
     </div>
     <nav>
-      <a href="#" onclick="goToAIassistpage()">AI assist</a>
-      <a href="#" onclick="goToAIqapage(); return false;">AI Q&A</a>
-      <a href="#" onclick="goToLoginpage()">로그인</a>
+      <!-- Flag 1: 비로그인 -->
+      {% if flag == 1 %}
+        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+
+        <span class="nav-spacer"></span>
+        <a href="{% url 'accounts:login' %}" class="action-link login-link">로그인</a>
+
+      <!-- Flag 2: 관리자 -->
+      {% elif flag == 2 %}
+        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+
+        <span class="nav-spacer"></span>
+        <span class="nav-user">관리자님</span>
+        <a href="{% url 'accounts:logout' %}" class="action-link">로그아웃</a>
+        <span class="divider">|</span>
+        <a href="{% url 'user_admin:user' %}" class="action-link">관리자 페이지</a>
+
+      <!-- Flag 3: 일반 사용자 -->
+      {% elif flag == 3 %}
+        <a href="#" class="menu-link"  onclick="goToAIassistpage()">AI assist</a>
+        <a href="#" class="menu-link"  onclick="goToAIqapage()">AI Q&amp;A</a>
+
+        <span class="nav-spacer"></span>
+        <span class="nav-user">{{ username }}님</span>
+        <a href="{% url 'accounts:logout' %}" class="action-link">로그아웃</a>
+        <span class="divider">|</span>
+        <a href="{% url 'accounts:mypage' %}" class="action-link">마이페이지</a>
+      {% endif %}
     </nav>
   </header>
 
+  
   <!-- 1) 첫 화면: background.jpg -->
   <main class="hero">
     {% comment %} 
@@ -37,14 +65,12 @@
   <section class="section features">
   </section>
 
-
-
   <!-- 4) AI Assist 섹션: 오른쪽에 이미지, 왼쪽에 텍스트 -->
   <section class="section ai-assist">
     <div class="content">
       <div class="text">
         <!-- 상단 체크 아이콘 + 한 줄 텍스트 -->
-        <div class="intro-line">
+        <br><br><br><br><div class="intro-line">
           <img src="{% static 'core/images/check_icon.png' %}" alt="check icon" class="icon-check" />
           PASS는 이런 서비스를 지원해요.
         </div>
@@ -92,7 +118,7 @@
 
       <div class="text">
         <!-- 상단 체크 아이콘 + 한 줄 텍스트 -->
-        <div class="intro-line">
+        <br><br><br><br><div class="intro-line">
           <img src="{% static 'core/images/check_icon.png' %}" alt="check icon" class="icon-check" />
           PASS는 이런 서비스를 지원해요.
         </div>
@@ -132,7 +158,7 @@
     <div class="content">
       <div class="text">
         <!-- 상단 체크 아이콘 + 한 줄 텍스트 -->
-        <div class="intro-line">
+        <br><br><br><br><div class="intro-line">
           <img src="{% static 'core/images/check_icon.png' %}" alt="check icon" class="icon-check" />
           PASS는 이런 서비스를 지원해요.
         </div>
@@ -180,7 +206,7 @@
 
       <div class="text">
         <!-- 상단 체크 아이콘 + 한 줄 텍스트 -->
-        <div class="intro-line">
+        <br><br><br><br><div class="intro-line">
           <img src="{% static 'core/images/check_icon.png' %}" alt="check icon" class="icon-check" />
           PASS는 이런 서비스를 지원해요.
         </div>

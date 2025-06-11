@@ -47,8 +47,8 @@ h1 {
 }
 
 .logo img {
-  width: 30px;
-  height: 30px;
+  width: 80px !important;
+  height: 80px !important;
 }
 
 .tab-nav {
@@ -113,6 +113,7 @@ h1 {
   padding: 0;
   margin: 0;
   flex-grow: 1;
+  display: block;
 }
 
 .user-list li {
@@ -120,13 +121,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #ddd;
-}
-
-.user-list li img {
-  width: 18px;
-  height: 18px;
-  margin-left: 8px;
+  border-bottom: none;
 }
 
 .add-user {
@@ -140,47 +135,452 @@ h1 {
   margin-top: 16px;
 }
 
-/* ===== 테이블 ===== */
-table {
-  width: 100%;
-  border-collapse: collapse;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none; /* JS에서 openUserCreateModal() 시 display: block */
 }
 
-th, td {
-  padding: 12px;
-  text-align: center;
-  border-bottom: 1px solid #ccc;
+#userModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 32px 36px;
+    width: 500px;
+    z-index: 1000;    /* 오버레이보다 위 */
+    display: none;    /* JavaScript로 제어 */
+}
+
+#userModal h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#userModal .user-info {
+    font-size: 15px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#userModal .user-info div {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+/* 모달 하단 버튼 영역 */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-buttons button {
+    padding: 10px 22px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+/* 취소 버튼 */
+.cancel-btn {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 24px;
+  border-radius: 8px;
+  cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+/* 추가 버튼 */
+.confirm-btn {
+  background-color: #0d1b3d; /* 진한 네이비 */
+  color: #ffffff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.confirm-btn:hover {
+  background-color: #09132a; /* 좀 더 어두운 네이비 */
 }
 
 
-/* 상태 셀을 정렬하기 위한 설정 */
-td.status-cell {
+.cancel-btn:hover {
+  background-color: #f2f2f2;
+}
+
+.confirm-btn {
+    background-color: #0d1b3d;
+    color: white;
+}
+
+.user-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    width: 200px;
+    background-color: #f9f9f9;
+}
+
+.modal {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+/* 모달 내부 콘텐츠 */
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 24px 32px;
+}
+
+/* 모달 헤더 제목 */
+.modal-content h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+
+/* ID / PW 2열 레이아웃 */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 24px;
+}
+.user-info div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.user-info strong {
+  width: 60px;  /* 텍스트 “ID” / “PW” 레이블 너비 고정 */
+  font-weight: bold;
+}
+.user-info span {
+  /* 값 부분 */
+  color: #1d1d1d;
+}
+
+/* 모달 닫기 아이콘 */
+.close {
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #999;
+  margin-top: -4px; /* 제목과 라인 맞추기 */
+}
+
+.close:hover {
+  color: #666;
+}
+.user-box {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+.user-actions img.icon-btn {
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.user-actions img.icon-btn:hover {
+  opacity: 1;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between; /* 좌우 정렬 */
+  align-items: center;
+  padding: 10px 15px;
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 8px; /* 각 항목 사이 간격 */
+  width: 100%;
+}
+
+.username {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.user-icons {
+  display: flex;
+  gap: 12px; /* 아이콘 간격 */
+}
+
+.icon-btn {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+
+/* 비밀번호 초기화용 오버레이 */
+#resetOverlay {
+  display: none;              /* 기본 숨김 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;               /* 사용자 생성 모달보다 아래에 두려면 z-index를 조정 */
+}
+
+/* 비밀번호 초기화용 모달 박스 */
+#resetModal {
+  display: none;              /* 기본 숨김 */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  z-index: 101;               /* 오버레이 위에 표시 */
+}
+
+#resetModal h3 {
+  margin: 0;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 12px;
-  border-bottom: 1px solid #ccc;
+  gap: 5px;
 }
 
-/* 상태 점 스타일 (기존 .status 정의는 유지) */
+#resetModal hr {
+  margin: 10px 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+#resetModal p {
+  margin: 10px 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+#resetModal .modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+#resetModal .cancel-btn,
+#resetModal .confirm-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#resetModal .cancel-btn {
+  background-color: #f0f0f0;
+}
+
+#resetModal .confirm-btn {
+  background-color: #2a3158;  /* 기존 다른 버튼 스타일과 비슷하게 맞춤 (네이비 계열) */
+  color: #fff;
+}
+
+/* 오버레이: 화면 전체를 검정 반투명으로 덮음 */
+#deactivateOverlay {
+  display: none;              /* 기본 숨김 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+}
+
+/* 모달 박스 */
+#deactivateModal {
+  display: none;              /* 기본 숨김 */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 360px;               /* 필요에 따라 너비 조정 */
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 24px 28px;
+  z-index: 1000;              /* 오버레이 위에 표시 */
+}
+
+/* 모달 제목 */
+#deactivateModal h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 수평 구분선 */
+#deactivateModal hr {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+/* 안내 문구 */
+#deactivateModal p {
+  margin: 10px 0 20px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #333;
+}
+
+/* 버튼 영역 (취소/확인) */
+#deactivateModal .modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 취소 버튼 */
+#deactivateModal .cancel-btn {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* 확인 버튼 */
+#deactivateModal .confirm-btn {
+  background-color: #0d1b3d;  /* 진한 네이비 */
+  color: #ffffff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#deactivateModal .cancel-btn:hover {
+  background-color: #f2f2f2;
+}
+
+#deactivateModal .confirm-btn:hover {
+  background-color: #09132a;
+}
+
+/* user.css */
+
+table {
+  width: 80%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* (기본) 모든 셀에 동일한 패딩과 수직 중앙 정렬 */
+table th,
+table td {
+  padding: 12px 16px;         /* 위아래 12px, 좌우 16px */
+  vertical-align: middle;     /* 수직 중앙 정렬 */
+}
+
+/* 1) 상태 열(1번째 열): 가운데 정렬 */
+table th:nth-child(1),
+table td:nth-child(1) {
+  text-align: center;
+  padding-left: 0px ;
+}
+
+/* 2) 사용자 열(2번째 열): 왼쪽 정렬 */
+table th:nth-child(2),
+table td:nth-child(2) {
+  text-align: center;
+  padding-left: 0px;
+}
+
+/* 3) 로그인 시간 열(3번째 열): 가운데 정렬 */
+table th:nth-child(3),
+table td:nth-child(3) {
+  text-align: center;
+  padding-left: 4px;
+}
+
+/* 4) 로그아웃 시간 열(4번째 열): 가운데 정렬 */
+table th:nth-child(4),
+table td:nth-child(4) {
+  text-align: center;
+  padding-left: 4px;
+}
+
+/* 상태 점 셀만 따로 셀렉터가 있다면, 
+   아래 1)과 중복되니 굳이 없어도 됩니다. */
+/* td.status-cell { text-align: center; } */
+
+/* 점 스타일 (기존) */
 .status {
   display: inline-block;
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  margin-right: 8px;
-  vertical-align: middle;
+  background-color: currentColor;
 }
+.status.blue { color: #007bff; }
+.status.red  { color: #dc3545; }
+.status.gray { color: #777; }
 
-/* 기존 .status 유지 */
 
-table td:first-child {
-  text-align: center;
-  vertical-align: middle;
+.log-section table {
+  width: 95%;             /* 테이블 폭을 95%로 줄이면 좌우 여백 생김 */
+  margin: 0 left;         /* 좌우 여백 생김 */
 }
-
-
-.status.pink { background: #ff7b9c; }
-.status.gray { background: #777; }
-.status.black { background: #111; }
