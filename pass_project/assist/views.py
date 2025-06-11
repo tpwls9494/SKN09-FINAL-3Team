@@ -11,7 +11,7 @@ from core.models import Template, Draft, User, Evaluation
 from django.template.loader import get_template
 from weasyprint import HTML, CSS
 from docx import Document
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from io import BytesIO
 import os
 import json
@@ -484,6 +484,10 @@ def download_pdf(request, draft_id):
 #     pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=response, encoding='utf-8')
 #     return response
 
+def add_paragraph_with_breaks(doc, text):
+    if text.strip():
+        doc.add_paragraph(text.strip())
+
 def download_docx(request, draft_id):
     data = json.loads(request.body)
     draft = get_object_or_404(Draft, draft_id=draft_id)
@@ -492,17 +496,36 @@ def download_docx(request, draft_id):
 
     soup = BeautifulSoup(html_content, "html.parser")
     doc = Document()
+    last_heading = None
 
-    for elem in soup.find_all(['p', 'h1', 'h2', 'ul', 'ol', 'li']):
-        if elem.name == "p":
-            doc.add_paragraph(elem.get_text())
-        elif elem.name == "h1":
-            doc.add_heading(elem.get_text(), level=1)
-        elif elem.name == 'h2':
-            doc.add_heading(elem.get_text(), level=2)
-        elif elem.name in ['ul', 'ol']:
-            for li in elem.find_all('li'):
-                doc.add_paragraph(li.get_text(), style="ListBullet")
+    for elem in soup.contents:
+        # 제목 처리
+        if elem.name in ['h1', 'h2', 'h3']:
+            level = int(elem.name[1])
+            heading_text = elem.get_text(strip=True)
+            doc.add_heading(heading_text, level=level)
+            last_heading = heading_text
+
+        # 리스트 처리
+        elif elem.name == 'ul':
+            for li in elem.find_all('li', recursive=False):
+                doc.add_paragraph(li.get_text(strip=True), style='ListBullet')
+
+        # 강조 포함 텍스트 (<strong>청구항 1</strong>: 내용)
+        elif elem.name == 'strong':
+            text = elem.get_text(strip=True)
+            if ':' in text:
+                title, content = text.split(':', 1)
+                doc.add_heading(title.strip(), level=3)
+                add_paragraph_with_breaks(doc, content.strip())
+            else:
+                doc.add_heading(text.strip(), level=3)
+
+        # 텍스트 노드 (본문으로 취급)
+        elif isinstance(elem, NavigableString):
+            text = elem.strip()
+            if text:  # 중복 방지
+                add_paragraph_with_breaks(doc, text)
 
     buffer = BytesIO()
     doc.save(buffer)
@@ -515,7 +538,6 @@ def download_docx(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.docx"'
     return response
 
-# from docx import Document
 # def download_docx(request, draft_id):
 #     draft = get_object_or_404(Draft, draft_id=draft_id)
 #     document = Document()

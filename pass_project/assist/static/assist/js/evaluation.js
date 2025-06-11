@@ -277,10 +277,9 @@ App.evaluation = {
   showRecommendationButtons() {
     const container = document.getElementById("after-eval");
 
-    const panelTitle = document.querySelector('.panel-title');
-    if (panelTitle) {
-      panelTitle.textContent = '재작성된 보고서 초안';
-    }
+    const panelTitle = document.getElementById('eval-header');
+    panelTitle.innerHTML = `<div class="panel-title">재작성된 보고서 초안</div>`
+
 
     const draftContent = document.getElementById('draftContent');
     const evaluateContent = document.getElementById('evaluationContent');
@@ -303,7 +302,8 @@ App.evaluation = {
 
     // 반영 버튼
     const applyBtn = document.createElement("button");
-    applyBtn.className = "btn btn-primary";
+    applyBtn.className = "draft-modifybutton";
+    applyBtn.style.border = "2px solid white";
     applyBtn.innerText = "반영";
     applyBtn.onclick = function () {
       App.draft.applyRecommendation();
@@ -311,7 +311,7 @@ App.evaluation = {
 
     // 재추천 버튼
     const reRecommendBtn = document.createElement("button");
-    reRecommendBtn.className = "btn btn-warning";
+    reRecommendBtn.className = "draft-reRecommentbutton";
     reRecommendBtn.innerText = "재추천";
     reRecommendBtn.onclick = function () {
       App.draft.retryRecommendation();
@@ -319,22 +319,22 @@ App.evaluation = {
 
     // 취소 버튼
     const cancelBtn = document.createElement("button");
-    cancelBtn.className = "btn btn-secondary";
+    cancelBtn.className = "draft-cancelbutton";
     cancelBtn.innerText = "취소";
     cancelBtn.onclick = function () {
       App.evaluation.restoreInitialButtons();
     };
 
     // 버튼 추가
-    container.appendChild(applyBtn);
-    container.appendChild(reRecommendBtn);
     container.appendChild(cancelBtn);
+    container.appendChild(reRecommendBtn);
+    container.appendChild(applyBtn);
   },
 
   restoreInitialButtons() {
     const container = document.getElementById("after-eval");
     const evaluateContent = document.getElementById('evaluationContent');
-    const panelTitle = document.querySelector('.panel-title');
+    const panelTitle = document.getElementById('eval-header');
 
     if (!container) return;
 
@@ -343,13 +343,11 @@ App.evaluation = {
       evaluateContent.style.color = "";  // 원래 색상으로 초기화
     }
 
-    if (panelTitle) {
-      panelTitle.textContent = '초안에 대한 평가';
-    }
+    panelTitle.innerHTML = `<div class="panel-title">초안에 대한 평가</div>`;
 
     container.innerHTML = `
-      <button type="button" class="btn btn-secondary" onclick="App.navigation.backToNormal()">취소</button>
-      <button type="button" class="btn btn-success" onclick="App.evaluation.showRecommendationButtons()">추천</button>
+      <button type="button" class="draft-cancelbutton" onclick="App.navigation.backToNormal()">취소</button>
+      <button type="button" class="draft-modifybutton" onclick="App.evaluation.showRecommendationButtons()">추천</button>
     `;
   }
 };

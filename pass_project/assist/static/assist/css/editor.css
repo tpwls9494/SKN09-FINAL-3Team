@@ -1594,6 +1594,7 @@
   height: 40px;
   box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3);
   font-weight: bold;
+  cursor: pointer;
 }
 
 .draft-modifybutton {
@@ -1605,6 +1606,19 @@
   height: 40px;
   box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3);
   font-weight: bold;
+  cursor: pointer;
+}
+
+.draft-reRecommentbutton {
+  background-color: #3B82F6BF;
+  color: white;
+  border-radius: 30px;
+  border: 2px solid white;
+  width: 78px;
+  height: 40px;
+  box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .draft_request_aibutton {

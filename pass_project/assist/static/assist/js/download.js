@@ -59,8 +59,6 @@ App.download = {
       App.utils.showNotification('다운로드할 초안이 없습니다.');
       return;
     }
-
-    console.log(format);
     
     switch (format) {
       case 'pdf':
@@ -125,7 +123,7 @@ App.download = {
   downloadDOCX() {
     if (App.data.currentDraftId) {
       const docx_html = App.utils.convertMarkdownToHTML(App.data.currentDraftContent);
-      console.log(docx_html);
+
       fetch(`/assist/download/docx/${App.data.currentDraftId}/`, {
         method: 'POST',
         headers: {
@@ -141,7 +139,6 @@ App.download = {
         return response.blob(); 
       })
       .then(blob => {
-        console.log('📦 Blob 크기:', blob.size);
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
