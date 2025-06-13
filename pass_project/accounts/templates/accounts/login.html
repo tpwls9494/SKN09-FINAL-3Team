@@ -14,7 +14,7 @@
             <div class="left-container">
                 <div class="header">
                     <div id="logo-container">                        
-                        <img id="logo-img" src="{% static 'accounts/images/logo.png' %}" alt="logo" style="cursor:pointer" onclick="window.location.href='/'"/>
+                        <img id="logo-img" src="{% static 'accounts/images/logo.png' %}" alt="logo" onclick="window.location.href='/'"/>
                     </div>
                     <div id="logo-title">
                         PASS
@@ -37,10 +37,10 @@
                             <div id="warn-pw">※ 비밀번호가 틀렸습니다.</div>
                         </div>
                         <div class="login-check interval">
-                            <input id="input-login-check" type="checkbox" value=1/>
-                            <div id="login-status">로그인 상태 유지</div>
+                            <!--<input id="input-login-check" type="checkbox" value=1/>
+                            <div id="login-status">로그인 상태 유지</div> -->
                         </div>
-                        <div class="login-button interval" style="margin-bottom:30px;">
+                        <div class="login-button interval" style="margin-bottom:20px;">
                             <button id="login-btn">로그인</button>
                         </div>
                     </div>
@@ -50,15 +50,15 @@
                 <div class="right-container-align-center">
                     <div class="introduce-box">
                         <div class="introduce-title">
-                            <img id="bulb-lights" src="{% static 'accounts/images/bulb-lights.png' %}" />
+                            {% comment %} <img id="bulb-lights" src="{% static 'accounts/images/bulb-lights.png' %}" /> {% endcomment %}
                             <span id="intro-title">PASS에서 뵙게 되어 반갑습니다</span>
                         </div>
                         <div class="introduce-content">
                             <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 비전문가도 가능한 특허 명세서 작성</div>
-                            <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 쉽고 빠른 중복 특허 검사</div>
+                            <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> AI를 활용한 빠르고 간편한 특허 문항 수정</div>
                             <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 특허의 3대 요소 평가</div>
                             <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 개선 방향을 제시하는 추천</div>
-                            <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 특허에 대한 모든 정보를 알려주는 Q&A 시스템</div>
+                            <div class="chapter"><img class="checkmark" src="{% static 'accounts/images/checkmark.png' %}" /> 특허에 대한 모든 정보를 알려주는 Q&A</div>
                         </div>
                     </div>
                 </div>

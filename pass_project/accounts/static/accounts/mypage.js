@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelBtn  = document.getElementById('cancelModal');
   const dupBtn     = document.getElementById('checkDuplicate');
   const confirmBtn = document.getElementById('confirmChange');
-  const resultMsg  = document.getElementById('nicknameCheckResult');
   const input      = document.getElementById('new_nickname');
+  const resultMsg  = document.getElementById('nicknameCheckResult');
 
   function getCsrf() {
     return document.querySelector('meta[name="csrf-token"]').content;
@@ -156,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
   openBtn.addEventListener('click', e => {
     e.preventDefault();
     modal.classList.remove('hidden');
-    resultMsg.classList.add('hidden');
     confirmBtn.disabled = true;
     input.value = '';
     input.focus();
@@ -177,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.available) {
           resultMsg.textContent = `"${nick}" 은(는) 사용 가능합니다.`;
           resultMsg.style.color = 'green';
+          resultMsg.classList.add("show");
           confirmBtn.disabled = false;
         } else {
           resultMsg.textContent = data.error || `"${nick}" 은(는) 이미 사용 중입니다.`;
