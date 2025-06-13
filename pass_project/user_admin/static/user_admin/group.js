@@ -146,7 +146,7 @@ function openAddUserModal(groupId, groupName) {
   selectedTeamId = groupId; 
   document.getElementById('modalOverlay').style.display = 'block';
   document.getElementById('addUserModal').style.display = 'block';
-  document.getElementById('addUserGroupName').value = groupName;
+  document.getElementById('addUserGroupName').textContent = groupName;
   document.getElementById('addUserInput').value = '';
 
   // 자동완성 사용자 목록 가져오기

@@ -17,11 +17,12 @@
     <div class="user-section">
       <div class="user-info">  
         {% if user.is_authenticated %}
-          {{ user.user_nickname }}님 
+          {{ user.user_nickname|default:"user" }}님 
         {% endif %}
       </div>
       <div class="user-buttons">
         <button class="user-btn" onclick="App.user.goToMyPage()">마이페이지</button>
+        <div style="width: 1px; height: 25px; background-color: #333;"></div>
         <button class="user-btn logout-btn" onclick="App.user.logout()">로그아웃</button>
       </div>
     </div>

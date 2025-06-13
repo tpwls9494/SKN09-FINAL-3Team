@@ -1,19 +1,9 @@
-@font-face {
-    font-family: 'SpoqaHanSansNeo';
-    src: url('/static/accounts/fonts/SpoqaHanSans-Regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
 html, body {
     height: 100vh;
     margin: 0;
     padding: 0;
     overflow-y: hidden;
-}
-
-body {
-    font-family: 'SpoqaHanSans', sans-serif;
+    font-family: 'Spoqa Han Sans Neo', sans-serif;
 }
 
 #login-container {
@@ -33,8 +23,8 @@ body {
 
 #logo-img{
     margin-top: 3px;
-    width: 80px;
-    height: 80px;
+    width: 50px;
+    height: 50px;
     cursor: pointer;
 }
 
@@ -58,37 +48,37 @@ body {
 .right-container{
     padding: 5px;
     background-color: #0F1E46;
-    width: 45%;
+    width: 48%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .left-container-align-center{
-    margin-top: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 70%;
+    height: 86vh;
 }
 
 .login-container {
     border-radius: 8px;
     border: 1px solid #ccc;
     padding: 10px;
-    width: 377px;
+    width: 410px;
+    height: 430px;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 .interval {
-    margin-top: 30px;
+    margin-top: 40px;
 }
 
 .login-title{
-    font-size: 16px;
+    font-size: 24px;
     color: #0F1E46;
     padding: 5px;
     font-weight: bold;
@@ -100,20 +90,24 @@ body {
 }
 
 .login-id-pw-font {
-    font-size: 12px;
+    font-size: 14px;
     color: #0F1E46;
     margin-left: 6px;
 }
+
+/* .login-pw {
+    margin-top: 50px;
+} */
 
 #input-id,
 #input-pw {
     padding: 3px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    width: 340px;
+    width: 345px;
     height: 30px;
     margin-top: 8px;
-    margin-left: 6px;
+    margin-left: 5px;
 }
 
 #input-id:focus,
@@ -145,7 +139,7 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-left: 28px;
+    margin-left: 60px;
     width: 100%;
 }
 
@@ -161,7 +155,7 @@ body {
 
 #login-status {
     color: #888888;
-    font-size: 12px;
+    font-size: 14px;
     margin-left: 10px;
 }
 
@@ -208,7 +202,7 @@ input[type="checkbox"]:checked::after {
     border-radius: 8px;
     background-color: #0F1E46;
     text-align: center;
-    font-size: 12px;
+    font-size: 14px;
     width: 347px;
     height: 35px;
     color: white;
@@ -223,6 +217,7 @@ input[type="checkbox"]:checked::after {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin-top: 10px;
     width: 100%;
 }
 
@@ -230,6 +225,8 @@ input[type="checkbox"]:checked::after {
     color: white;
     display: flex;
     flex-direction: column;
+    padding: 10px;
+    margin-top: 40px;
 }
 
 .introduce-title {
@@ -239,27 +236,27 @@ input[type="checkbox"]:checked::after {
     justify-content: flex-start;
     align-items: center;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 24px;
     margin-bottom: 40px;
 }
 
 #bulb-lights {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     margin-right: 10px;
 }
 
 .checkmark{
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
     margin-right: 10px;
 }
 
 .introduce-content div{
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     padding: 5px;
-    margin-left: 12px;
-    font-size: 12px;
+    margin-left: 14px;
+    font-size: 14px;
 }
 
 .chapter {

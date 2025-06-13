@@ -88,12 +88,14 @@ def ajax_login(request):
 
         # 1) 사용자 존재 확인
         user = CoreUser.objects.filter(username=user_id).first()
+        print("?",user)
         
         # 수정 필요
-        user.password = make_password(password)
-        user.save()
+        if user != None:
+            user.password = make_password(password)
+            user.save()
 
-        if not user:
+        if not user and user == None:
             return JsonResponse({'success': False, 'error': '아이디가 잘못되었습니다.'})
 
         # 2) 비활성화 계정 체크
@@ -220,7 +222,7 @@ def logout_view(request):
 
     # role 파라미터 결정 (관리자면 admin, 아니면 user)
     role = 'admin' if was_admin else 'user'
-    return redirect(f"{reverse('core:main')}?role={role}")
+    return redirect(f"{reverse('accounts:login')}?role={role}")
 
 
 

@@ -324,7 +324,7 @@ function openUserCreateModal() {
         previewPassword = data.password;
         document.getElementById('generatedId').innerText = previewUsername;
         document.getElementById('generatedPw').innerText = previewPassword;
-        document.getElementById('userResult').innerText = '사용자를 확정하려면 "추가"를 눌러주세요.';
+        document.getElementById('userResult').innerText = '※ 사용자를 확정하려면 "추가"를 눌러주세요.';
       } else {
         document.getElementById('userResult').innerText = `오류 발생: ${data.error}`;
       }
