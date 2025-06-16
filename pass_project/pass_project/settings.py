@@ -30,7 +30,7 @@ SECRET_KEY = "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs" #os.getenv('SE
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ['13.209.57.183', "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -85,14 +85,26 @@ WSGI_APPLICATION = 'pass_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+#RDS 추가 전
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'passdb',  # 데이터베이스 이름
+#         'USER': 'root',        # MySQL 사용자
+#         'PASSWORD': '1234', # MySQL 비밀번호
+#         'HOST': '127.0.0.1',   # 로컬 호스트
+#         'PORT': '3306',        # MySQL 포트
+#     }
+# }
+# RDS 추가 후
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'passdb',  # 데이터베이스 이름
-        'USER': 'root',        # MySQL 사용자
-        'PASSWORD': '1234', # MySQL 비밀번호
-        'HOST': '127.0.0.1',   # 로컬 호스트
-        'PORT': '3306',        # MySQL 포트
+        'NAME': 'passdb',  # RDS에서 생성한 DB 이름
+        'USER': 'admin',   # RDS 생성 시 설정한 사용자
+        'PASSWORD': '11111111',  # RDS 사용자 비밀번호 아닐시 Pass7276!
+        'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',  # RDS 엔드포인트
+        'PORT': '3306',
     }
 }
 
@@ -154,3 +166,43 @@ AUTH_USER_MODEL = 'core.User'
 # 브라우저 종료 시 세션 쿠키를 자동으로 삭제하도록 전역 설정
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
+# 로깅 설정
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/rag.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'assist.rag_client': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# logs 디렉토리가 없으면 생성
+import os
+if not os.path.exists('logs'):
+    os.makedirs('logs')

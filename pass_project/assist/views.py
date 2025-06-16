@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.models.functions import Substr, Cast
 from django.db.models import IntegerField, OuterRef, Subquery
 from django.utils import timezone
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.conf import settings
 from .forms import TemplateForm
 from core.models import Template, Draft, User, Evaluation, Team, TeamLog
@@ -13,9 +14,11 @@ from weasyprint import HTML, CSS
 from docx import Document
 from bs4 import BeautifulSoup, NavigableString
 from io import BytesIO
+import requests
 import os
 import json
-from collections import defaultdict
+from .rag_client import rag_client
+import logging
 
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
@@ -583,25 +586,6 @@ def download_pdf(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.pdf"'
     return response
 
-# from xhtml2pdf import pisa
-# from xhtml2pdf.default import DEFAULT_FONT
-# from reportlab.pdfbase import pdfmetrics
-# from reportlab.pdfbase.ttfonts import TTFont
-# from reportlab.lib.fonts import addMapping
-# def download_pdf(request, draft_id):
-#     draft = get_object_or_404(Draft, draft_id=draft_id)
-#     template = get_template('assist\includes\draft_pdf_template.html')  # 경로 수정
-#     html_content = markdown.markdown(draft.__dict__['create_draft'])
-
-#     font_path = os.path.join(settings.BASE_DIR, 'assist', 'static', 'assist', 'fonts', 'malgun.ttf')
-#     font_url = f'file://{font_path.replace(os.sep, "/")}'
-#     html = template.render({'draft': draft, 'create_draft_html': html_content, 'font_path': font_url})
-
-#     response = HttpResponse(content_type='application/pdf')
-#     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__['draft_title']}.pdf"'
-#     pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=response, encoding='utf-8')
-#     return response
-
 def add_paragraph_with_breaks(doc, text):
     if text.strip():
         doc.add_paragraph(text.strip())
@@ -656,19 +640,6 @@ def download_docx(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.docx"'
     return response
 
-# def download_docx(request, draft_id):
-#     draft = get_object_or_404(Draft, draft_id=draft_id)
-#     document = Document()
-#     document.add_heading(draft.draft_name, level=1)
-#     document.add_paragraph(draft.create_draft)
-
-#     response = HttpResponse(
-#         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-#     )
-#     response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.docx"'
-#     document.save(response)
-#     return response
-
 def download_hwp(request, draft_id):
     """HWP 다운로드 (현재는 텍스트 파일로 대체)"""
     draft = get_object_or_404(Draft, draft_id=draft_id)
@@ -680,3 +651,273 @@ def download_hwp(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__["draft_title"]}.txt"'
     return response
     
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------
+#  FastAPI QA 서버 연결 설정
+# ---------------------------------------------------------------------
+FASTAPI_BASE_URL = getattr(settings, "RAG_SERVER_URL", "http://localhost:7860")
+FASTAPI_QA_URL   = f"{FASTAPI_BASE_URL}/api/qwen/qa"
+
+def call_fastapi_qa(question: str, max_new_tokens: int = 512) -> str:
+    """
+    FastAPI 서버의 /api/qwen/qa 엔드포인트로 질문을 보내고
+    HTML 형식 답변을 그대로 반환한다.
+    """
+    try:
+        resp = requests.post(
+            FASTAPI_QA_URL,
+            json={"query": question, "max_new_tokens": max_new_tokens},
+            timeout=60
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("answer", "<p>답변을 가져오지 못했습니다.</p>")
+    except Exception as exc:
+        logger.error("FastAPI QA 호출 실패: %s", exc)
+        return (
+            "<p>QA 서버와의 통신에 실패했습니다. "
+            "잠시 후 다시 시도해 주세요.</p>"
+        )
+
+# ---------------------------------------------------------------------
+#  Q&A  View
+# ---------------------------------------------------------------------
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def qa_view(request):
+    """
+    GET  → Q&A 페이지 렌더링
+    POST → FastAPI QA 모델 호출 후 JSON 응답
+    """
+    if request.method == "GET":
+        return render(request, "assist/qa.html")
+
+    # POST(JSON)
+    if request.headers.get("Content-Type", "").startswith("application/json"):
+        try:
+            payload  = json.loads(request.body)
+            question = payload.get("question", "").strip()
+
+            if not question:
+                return JsonResponse(
+                    {"success": False, "message": "질문을 입력해 주세요."},
+                    status=400,
+                )
+
+            answer_html = call_fastapi_qa(question)
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "answer": answer_html,
+                    "message": "답변이 생성되었습니다.",
+                }
+            )
+
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "message": "잘못된 JSON 형식입니다."}, status=400
+            )
+        except Exception as exc:
+            logger.error("qa_view 예외: %s", exc)
+            return JsonResponse(
+                {"success": False, "message": str(exc)}, status=500
+            )
+
+    # 기타 Content-Type
+    return JsonResponse(
+        {"success": False, "message": "지원하지 않는 Content-Type"}, status=415
+    )
+
+# RAG 서버 연결
+@csrf_exempt
+@require_http_methods(["POST"])
+def test_rag_connection(request):
+    """RAG 서버 연결 테스트"""
+    try:
+        # 헬스체크
+        health = rag_client.health_check()
+        return JsonResponse({
+            "status": "success",
+            "health_check": health,
+            "server_url": rag_client.base_url
+        })
+    except Exception as e:
+        logger.error(f"RAG 연결 테스트 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+# 한번에
+@csrf_exempt
+@require_http_methods(["POST"])
+def ask_question(request):
+    """질문하기 API"""
+    if request.method == "GET":
+        return JsonResponse({"message": "POST 요청을 사용하세요"})
+
+    try:
+        data = json.loads(request.body)
+        query = data.get('query', '').strip()
+
+        if not query:
+            return JsonResponse({
+                "status": "error",
+                "message": "질문을 입력해주세요."
+            }, status=400)
+
+        # RAG 서버에 질문 요청
+        result = rag_client.generate_answer(
+            query=query,
+            max_new_tokens=data.get('max_new_tokens', 512),
+            top_k=data.get('top_k', 5),
+            temperature=data.get('temperature', 0.7)
+        )
+
+        return JsonResponse(result)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "status": "error",
+            "message": "잘못된 JSON 형식입니다."
+        }, status=400)
+    except Exception as e:
+        logger.error(f"질문 처리 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+# 스트리밍
+@csrf_exempt
+@require_http_methods(["GET"])
+def ask_question_stream(request):
+    """스트리밍 질문하기 API (GET 방식)"""
+    try:
+        # GET 파라미터에서 데이터 추출
+        query = request.GET.get('query', '').strip()
+        max_new_tokens = int(request.GET.get('max_new_tokens', 512))
+        top_k = int(request.GET.get('top_k', 5))
+        temperature = float(request.GET.get('temperature', 0.7))
+
+        if not query:
+            def error_generator():
+                yield f"data: {json.dumps({'type': 'error', 'message': '질문을 입력해주세요'})}\n\n"
+
+            response = StreamingHttpResponse(
+                error_generator(),
+                content_type='text/event-stream; charset=utf-8'
+            )
+            response['Cache-Control'] = 'no-cache'
+            response['Connection'] = 'keep-alive'
+            response['X-Accel-Buffering'] = 'no'
+            return response
+
+        # RunPod RAG 서버에 GET 방식으로 스트리밍 요청
+        def stream_from_rag():
+            try:
+                # FastAPI GET 엔드포인트 호출 (URL 파라미터 사용)
+                params = {
+                    'query': query,
+                    'max_new_tokens': max_new_tokens,
+                    'top_k': top_k,
+                    'temperature': temperature
+                }
+
+                response = requests.get(
+                    f'{rag_client.base_url}/api/rag/generate-stream',
+                    params=params,
+                    stream=True,
+                    timeout=300  # 5분 타임아웃
+                )
+
+                response.raise_for_status()
+
+                # 스트림 데이터를 실시간으로 전달
+                for line in response.iter_lines(decode_unicode=True):
+                    if line:
+                        if line.startswith('data: '):
+                            yield f"{line}\n\n"
+                        else:
+                            yield f"data: {line}\n\n"
+
+                        # 즉시 전송을 위한 플러시
+                        import sys
+                        sys.stdout.flush()
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"RAG 서버 스트리밍 요청 실패: {str(e)}")
+                error_data = json.dumps({
+                    'type': 'error',
+                    'message': f'RAG 서버 연결 실패: {str(e)}'
+                })
+                yield f"data: {error_data}\n\n"
+            except Exception as e:
+                logger.error(f"스트리밍 처리 중 오류: {str(e)}")
+                error_data = json.dumps({
+                    'type': 'error',
+                    'message': f'처리 중 오류: {str(e)}'
+                })
+                yield f"data: {error_data}\n\n"
+
+        response = StreamingHttpResponse(
+            stream_from_rag(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+
+        # 실시간 스트리밍을 위한 헤더 설정
+        response['Cache-Control'] = 'no-cache'
+        response['Connection'] = 'keep-alive'
+        response['X-Accel-Buffering'] = 'no'  # nginx 버퍼링 방지
+
+        return response
+
+    except ValueError as e:
+        logger.error(f"파라미터 오류: {str(e)}")
+        def error_generator():
+            yield f"data: {json.dumps({'type': 'error', 'message': f'파라미터 오류: {str(e)}'})}\n\n"
+
+        response = StreamingHttpResponse(
+            error_generator(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+        response['Cache-Control'] = 'no-cache'
+        return response
+    except Exception as e:
+        logger.error(f"스트리밍 질문 처리 실패: {str(e)}")
+        def error_generator():
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+        response = StreamingHttpResponse(
+            error_generator(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+        response['Cache-Control'] = 'no-cache'
+        return response
+
+def rag_demo(request):
+    """RAG 시스템 데모 페이지"""
+    return render(request, 'assist/rag_demo.html')
+
+def rag_demo_stream(request):
+    """RAG 시스템 데모 페이지(스트리밍)"""
+    return render(request, 'assist/rag_demo_stream.html')
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def rag_status(request):
+    """RAG 시스템 상태 확인"""
+    try:
+        health = rag_client.health_check()
+        return JsonResponse({
+            "status": "success",
+            "rag_server": health,
+            "server_url": rag_client.base_url
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)

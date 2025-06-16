@@ -392,9 +392,3 @@ document.addEventListener('DOMContentLoaded', function () {
     confirmBtn.addEventListener('click', confirmGroupCreate);
   }
 });
-
-// 그룹에 사용자 추가 모달
-
-// 그룹 삭제 모달
-
-// 취소 모달

@@ -16,4 +16,16 @@ urlpatterns = [
     path('download/pdf/<int:draft_id>/', views.download_pdf, name='download_pdf'),
     path('download/docx/<int:draft_id>/', views.download_docx, name='download_docx'),
     path('download/hwp/<int:draft_id>/', views.download_hwp, name='download_hwp'),
+
+    #rag
+    path('api/test-rag/', views.test_rag_connection, name='test_rag'),
+    path('api/rag-status/', views.rag_status, name='rag_status'),
+
+    #한번에
+    path('api/ask/', views.ask_question, name='ask_question'),
+    path('demo/', views.rag_demo, name='rag_demo'),
+
+    #스트리밍
+    path('api/ask-stream/', views.ask_question_stream, name='ask_question_stream'),
+    path('demo-stream/', views.rag_demo_stream, name='rag_demo_stream'),
 ]

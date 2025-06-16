@@ -14,9 +14,7 @@ from django.contrib.auth.hashers import make_password
 
 logger = logging.getLogger(__name__)
 
-# ───────────────────────────────────────────────────────────
-# 1) 마이페이지 및 닉네임 처리
-# ───────────────────────────────────────────────────────────
+# 1 마이페이지 및 닉네임 처리
 
 @login_required
 def mypage_view(request):
@@ -77,9 +75,7 @@ def update_nickname(request):
     user.save(update_fields=['user_nickname'])
     return JsonResponse({'success': True})
 
-# ───────────────────────────────────────────────────────────
-# 2) 전통적(폼) 로그인 뷰
-# ───────────────────────────────────────────────────────────
+# 2 전통적(폼) 로그인 뷰
 
 @anonymous_required
 def login_view(request):
@@ -99,9 +95,7 @@ def login_view(request):
 
     return render(request, 'accounts/login.html', {'error': '아이디 또는 비밀번호가 잘못되었습니다.'})
 
-# ───────────────────────────────────────────────────────────
-# 3) AJAX 로그인
-# ───────────────────────────────────────────────────────────
+# 3 AJAX 로그인
 
 @csrf_exempt
 def ajax_login(request):
@@ -115,11 +109,6 @@ def ajax_login(request):
 
         # 1) 사용자 존재 확인
         user = CoreUser.objects.filter(username=user_id).first()
-        
-        # 수정 필요
-        # if user != None:
-        #     user.password = make_password(password)
-        #     user.save()
 
         if not user and user == None:
             return JsonResponse({'success': False, 'error': '아이디가 잘못되었습니다.'})
@@ -142,10 +131,7 @@ def ajax_login(request):
         else:
             request.session.set_expiry(0)
 
-        # 6) 로그인 로그 남기기 (optional)
-        # LoginLog.objects.create(user_code=user, user_ip=... )
-
-        # 7) 리다이렉트 URL 반환
+        # 6) 리다이렉트 URL 반환
         redirect_url = reverse('core:main')
         return JsonResponse({'success': True, 'redirect_url': redirect_url})
 
@@ -153,9 +139,7 @@ def ajax_login(request):
         logger.error("ajax_login ERROR", exc_info=True)
         return JsonResponse({'success': False, 'error': '서버 에러가 발생했습니다.'}, status=500)
 
-# ───────────────────────────────────────────────────────────
-# 4) 로그인 로그 삽입
-# ───────────────────────────────────────────────────────────
+# 4 로그인 로그 삽입
 
 @csrf_exempt
 def ajax_insert_login_log(request):
@@ -178,9 +162,7 @@ def ajax_insert_login_log(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-# ───────────────────────────────────────────────────────────
-# 5) 마지막 로그인 사용자 조회
-# ───────────────────────────────────────────────────────────
+# 5 마지막 로그인 사용자 조회
 
 def get_client_ip(request):
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -202,28 +184,6 @@ def get_prev_login_user(request):
     except LoginLog.DoesNotExist:
         return JsonResponse({'success': False, 'error': '해당 IP로 로그인한 기록이 없습니다.'})
 
-# ───────────────────────────────────────────────────────────
-# 6) 로그아웃 뷰
-# ───────────────────────────────────────────────────────────
-
-# def logout_view(request):
-#     if request.user.is_authenticated:
-#         try:
-#             log = LoginLog.objects.filter(user_code=request.user).latest('login_time')
-#             if not log.logout_time:
-#                 log.logout_time = timezone.now()
-#                 log.save()
-#         except LoginLog.DoesNotExist:
-#             pass
-#         auth_logout(request)
-#     return redirect('accounts:login')
-
-from django.shortcuts import redirect
-from django.urls import reverse
-from django.utils import timezone
-from django.contrib.auth import logout as auth_logout
-
-# … (중략) …
 
 def logout_view(request):
     """
@@ -250,11 +210,7 @@ def logout_view(request):
     role = 'admin' if was_admin else 'user'
     return redirect(f"{reverse('accounts:login')}?role={role}")
 
-
-
-# ───────────────────────────────────────────────────────────
-# 7) 비밀번호 재설정 외 기타 뷰
-# ───────────────────────────────────────────────────────────
+# 6 비밀번호 재설정 외 기타 뷰
 
 def repassword_view(request):
     return render(request, 'accounts/repassword.html')
