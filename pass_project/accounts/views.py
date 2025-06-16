@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
 from .utils import anonymous_required
-from core.models import User as CoreUser, LoginLog  # 커스텀 사용자 모델만 사용
+from core.models import User as CoreUser, LoginLog, TeamLog, Team  # 커스텀 사용자 모델만 사용
 from django.contrib.auth.hashers import make_password
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,33 @@ logger = logging.getLogger(__name__)
 @login_required
 def mypage_view(request):
     return render(request, 'accounts/mypage.html', {'user': request.user})
+
+@login_required
+def select_department(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_nickname = data.get("user_nickname")
+        user_id = data.get("userId")
+        
+        try: 
+            user = CoreUser.objects.get(user_nickname=user_nickname)
+        except CoreUser.DoesNotExist:
+            try:
+                user = CoreUser.objects.get(username=user_id)
+            except CoreUser.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': '해당 사용자를 찾을 수 없습니다.'}, status=404)
+            
+        user_code = user.__dict__['user_code']
+        teamLog = TeamLog.objects.filter(user_code_id=user_code)
+        
+        team_list = []
+        for tl in teamLog:
+            team = Team.objects.get(team_id=tl.team_id_id)
+            team_list.append(team.team_name)
+                
+        return JsonResponse({'status': 'success', 'message': '조회 완료', 'data': team_list})
+
+    return JsonResponse({'status': 'error', 'message': '호엥'})
 
 @login_required
 def check_nickname(request):
@@ -88,12 +115,11 @@ def ajax_login(request):
 
         # 1) 사용자 존재 확인
         user = CoreUser.objects.filter(username=user_id).first()
-        print("?",user)
         
         # 수정 필요
-        if user != None:
-            user.password = make_password(password)
-            user.save()
+        # if user != None:
+        #     user.password = make_password(password)
+        #     user.save()
 
         if not user and user == None:
             return JsonResponse({'success': False, 'error': '아이디가 잘못되었습니다.'})

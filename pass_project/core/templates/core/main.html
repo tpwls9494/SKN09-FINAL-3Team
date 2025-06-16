@@ -62,9 +62,9 @@
 
         <div class="login-container-loged">
           <div class="nav-user">{{ username }}님</div>
-          <a href="{% url 'accounts:logout' %}" class="action-link">로그아웃</a>
+          <a href="{% url 'accounts:logout' %}" class="action-link login-link">로그아웃</a>
           <span class="divider">|</span>
-          <a href="{% url 'accounts:mypage' %}" class="action-link">마이페이지</a>
+          <a href="{% url 'accounts:mypage' %}" class="action-link login-link">마이페이지</a>
         </div>
       {% endif %}
 

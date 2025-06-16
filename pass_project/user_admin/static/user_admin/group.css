@@ -118,8 +118,13 @@ h1 {
 .log-section h2 {
   font-size: 18px;
   margin-top: 0px;
-  margin-bottom: 16px;
+  margin-bottom: 30px;
   color: #0d1b3d;
+}
+
+.group-box-container {
+  max-height: 533px;
+  overflow-y: auto;
 }
 
 /* ===== 사용자 목록 ===== */
@@ -159,8 +164,7 @@ h1 {
 .group-box {
   border: 2px solid #0c1a3e;
   border-radius: 10px;
-  margin-bottom: 16px;
-  margin-top: 30px;
+  margin-bottom: 5px;
 }
 
 .group-header {
@@ -277,6 +281,7 @@ h1 {
 }
 
 #groupModal .form-group input {
+  width: 100%;
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -374,7 +379,7 @@ h1 {
   margin-bottom: 20px;
 }
 
-.modal .form-group input {
+#addUserInput {
   width: 100%;
   padding: 10px;
   border-radius: 6px;
@@ -498,4 +503,12 @@ h1 {
   background-color: #ccc;
   margin-bottom: 8px;
   margin-top: 6px;
+}
+
+.disabled {
+  border: 1px solid #5A5A5A;
+  background-color: #ccc;
+  color: #7b7b7b;
+  opacity: 0.7;
+  cursor: default;
 }

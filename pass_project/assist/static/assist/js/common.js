@@ -220,6 +220,8 @@ window.App = {
     backToNormal() {
       const fullPanel = document.getElementById('fullPanelContainer');
       const evaluationLayout = document.getElementById('evaluationLayout');
+
+      App.utils.showNotification('평가가 취소되었습니다.');
       
       if (fullPanel && evaluationLayout) {
         fullPanel.style.display = 'flex';
@@ -237,14 +239,32 @@ window.App = {
       // 실제로는 마이페이지로 리디렉션
       window.location.href = '/accounts/mypage';
     },
-    
+
     logout() {
       if (confirm('로그아웃 하시겠습니까?')) {
-        App.utils.showNotification('로그아웃 중입니다...');
-        // 실제로는 로그아웃 처리
-        window.location.href = '/accounts/login/';
+        fetch('/accounts/logout-POST/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }).then(res => {
+          if (res.ok) {
+            window.location.href = '/accounts/login/';
+          } else {
+            alert('로그아웃 실패');
+          }
+        });
       }
     }
+    
+    // logout() {
+    //   if (confirm('로그아웃 하시겠습니까?')) {
+    //     App.utils.showNotification('로그아웃 중입니다...');
+    //     // 실제로는 로그아웃 처리
+    //     window.location.href = '/accounts/logout/?next=/accounts/login/';
+    //   }
+    // }
   }
 };
 
@@ -262,6 +282,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // 초기 네비게이션 상태 설정
   initNavigationState();
 });
+
+function getCSRFToken() {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; csrftoken=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
 function setupHeaderTrigger() {
   const hiddenHeader = document.getElementById('hiddenHeader');

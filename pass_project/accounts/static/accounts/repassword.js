@@ -170,7 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         /[0-9]/.test(np) &&
                         /[!@#$%^&*]/.test(np);
     if (!validFormat) {
-      alert('새 비밀번호 형식을 확인해 주세요.');
+      alert('비밀번호는 8자 이상 16자 이하의 영어 대소문자, 숫자, 특수기호로 입력하셔야 합니다.');
+      //alert('새 비밀번호 형식을 확인해 주세요.');
       return;
     }
 

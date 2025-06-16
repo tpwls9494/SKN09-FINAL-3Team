@@ -39,10 +39,11 @@
           </div>
           <div class="info-value-zone">
             <div class="nickname-row">
+            <div id ="current-userId" style="display: none;">{{ user.username }}</div>
             <div id="current-nick">{{ user.user_nickname|default:"사용자" }}</div>
             <button class="btn-change" id="btn-nick">변경</button>
           </div>
-            <div>{{ user.profile.department|default:"부서 미지정" }}</div>
+            <div id="userDepartmentInfo"></div>
           </div>
         </div>
       </main>
@@ -59,7 +60,7 @@
       <hr />
       <div class="modal-row">
         <div class="modal-label">기존 닉네임</div>
-        <div class="modal-value" id="old-nick">{{ user.user.username }}</div>
+        <div class="modal-value" id="old-nick">{{ user.user_nickname | default:"닉네임 미지정" }}</div>
       </div>
       <div class="modal-row modal-input">
         <div class="modal-label">변경 닉네임</div>

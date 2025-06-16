@@ -428,7 +428,7 @@ function confirmReset() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert(`${resetUsername}님의 비밀번호가 초기화되었습니다.\n(초기 비밀번호: 1111)`);
+        alert(`${resetUsername}님의 비밀번호가 초기화되었습니다.\n(초기 비밀번호: 1111)\n다시 로그인 해 주시기 바랍니다.`);
       } else {
         alert(`초기화 실패: ${data.error}`);
       }
@@ -437,6 +437,7 @@ function confirmReset() {
     .finally(() => {
       cancelReset();
       loadUserList();
+      location.reload();
     });
 }
 
@@ -457,6 +458,19 @@ function cancelDeactivate() {
 function confirmDeactivate() {
   if (!deactivateUsername) return cancelDeactivate();
 
+  const userRow = document.querySelector(`tr[data-username="${deactivateUsername}"]`);
+  if(!userRow) {
+    alert('사용자 정보를 찾을 수 없습니다.')
+    return cancelDeactivate();
+  }
+
+  const status = userRow.getAttribute('data-status');
+
+  if(status === "active") {
+    alert(`“${deactivateUsername}” 사용자가 현재 로그인 상태입니다. 로그아웃 후 정지할 수 있습니다.`);
+    return cancelDeactivate();
+  }
+
   fetch('/user_admin/user/deactivate/', {
     method: 'POST',
     credentials: 'same-origin',
@@ -470,6 +484,7 @@ function confirmDeactivate() {
     .then(data => {
       if (data.success) {
         alert(`“${deactivateUsername}” 사용자가 정지되었습니다.`);
+        
       } else {
         alert(`정지 실패: ${data.error}`);
       }
