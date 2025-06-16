@@ -1,4 +1,10 @@
 {% load static %}
+<script>
+    const currentUser = {
+    id: '{{ user.username }}',
+    usernickname: '{{ user.user_nickname }}'
+  };
+</script>
 <!-- 숨겨진 헤더 (마우스 호버시 나타남) -->
 <div class="hidden-header" id="hiddenHeader">
   <div class="header-content">

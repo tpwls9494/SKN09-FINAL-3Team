@@ -36,44 +36,47 @@
 
       <section class="log-section">
         <h2>그룹 내 사용자</h2>
-        {% for group in groups %}
-          <div class="group-box {% if forloop.first %}expanded{% endif %}">
-            <div class="group-header" onclick="toggleGroup(this)">
-              <span>{{ group.team_name }}</span>
-              <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
-            </div>
-            <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
-            {% for user in group.users %}
-              <li>
-                <span class="status 
-                  {% if not user.is_active %}
-                    white
-                  {% elif user.is_logged_in %}
-                    pink
-                  {% else %}
-                    gray
-                  {% endif %}
-                "></span>
-                <span class="username">{{ user.user_nickname|default:user.username }}</span>
-              
-                <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" 
-                    onclick="deleteUserFromGroup('{{ group.team_id }}', '{{ user.user_code }}')">
+        <div class="group-box-container">
+          {% for group in groups %}
+            <div class="group-box {% if forloop.first %}expanded{% endif %}">
+              <div class="group-header {% if "[비활성]" in group.team_name %} disabled{% endif %}"
+              {% if not "[비활성]" in group.team_name %} onclick="toggleGroup(this)" {% endif %}>
+                <span>{{ group.team_name }}</span>
+                <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
+              </div>
+              <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
+              {% for user in group.users %}
+                <li>
+                  <span class="status 
+                    {% if not user.is_active %}
+                      white
+                    {% elif user.is_logged_in %}
+                      pink
+                    {% else %}
+                      gray
+                    {% endif %}
+                  "></span>
+                  <span class="username">{{ user.user_nickname|default:user.username }}</span>
+                
+                  <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" 
+                      onclick="deleteUserFromGroup('{{ group.team_id }}', '{{ user.user_code }}')">
 
-              </li>
-            {% empty %}
-              <li class="empty-message">등록된 사용자가 없습니다.</li>
-            {% endfor %}
-            </ul>
-          </div>
-        {% endfor %}
+                </li>
+              {% empty %}
+                <li class="empty-message">등록된 사용자가 없습니다.</li>
+              {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
       </section>
     </main>
   </div>
 
   <div class="modal-overlay" id="modalOverlay"></div>
 
-  <!-- 사용자 생성 모달 -->
-  <div id="groupModal">
+  <!-- 그룹 생성 모달 -->
+  <div id="groupModal" style="display:none;" class="modal hidden">
     <div class="modal-whole">
       <h3>
         <i class="fa-solid fa-people-group"></i> 그룹 생성
@@ -88,8 +91,9 @@
         <button class="cancel-btn">취소</button>
         <button class="confirm-btn">추가</button>
       </div>
-    <div>
+    </div>
   </div>
+
   <!-- 사용자 추가 모달 -->
   <div id="addUserModal" class="modal hidden">
     <h3><i class="fa-solid fa-user-group"></i> 그룹 사용자 추가</h3>

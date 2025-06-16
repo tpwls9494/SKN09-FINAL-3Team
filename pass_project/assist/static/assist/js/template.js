@@ -222,7 +222,6 @@
       return response.json();
     })
     .then(data => {
-      console.log('서버 응답:',data);
       window.CURRENT_TEMPLATE_ID = data.template_id;
       App.data.currentDraftId = data.draft_id;
       App.utils.showNotification(`특허명세서로 변환 되었습니다.`);

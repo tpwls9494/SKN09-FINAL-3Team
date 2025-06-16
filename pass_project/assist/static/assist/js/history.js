@@ -1,51 +1,5 @@
 // 히스토리 관련 기능
 App.history = {
-  data: {
-    myHistory: [
-      {
-        id: 1,
-        title: '항공업 자동 예약 시스템',
-        items: [
-          { id: 11, title: '생성된 특허 명세서 초안 1', content: '...' },
-          { id: 12, title: '생성된 특허 명세서 초안 2', content: '...' }
-        ],
-        expanded: true
-      },
-      {
-        id: 2,
-        title: '최적화된 항공 혼잡 해결...',
-        items: [
-          { id: 21, title: '특허 명세서 초안', content: '...' }
-        ],
-        expanded: false
-      }
-    ],
-    teamHistory: [
-      {
-        id: 1,
-        name: 'dbwlsdl01 님',
-        items: [
-          { id: 11, title: '항공편 자동 예약 시스템', content: '...' },
-          { id: 12, title: '특허 명세서 초안 33333', content: '...' },
-          { id: 13, title: '특허허허 명세서 초안', content: '...' }
-        ],
-        expanded: true
-      },
-      {
-        id: 2,
-        name: 'rodnfl02 님',
-        items: [],
-        expanded: false
-      },
-      {
-        id: 3,
-        name: 'tpwlsdl98 님',
-        items: [],
-        expanded: false
-      }
-    ]
-  },
-  
   // 패널 토글
   togglePanel() {
     const historyPanel = document.getElementById('historyPanel');
@@ -76,47 +30,153 @@ App.history = {
   // My History 렌더링
   renderMyHistory() {
     const container = document.getElementById('myHistoryItems');
-    if (!container) return;
-    
     container.innerHTML = '';
-    
-    this.data.myHistory.forEach(group => {
-      const groupElement = this.createHistoryItemElement(group);
-      container.appendChild(groupElement);
-    });
+
+    if(container.innerHTML == '') {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-history';
+      emptyDiv.textContent = '히스토리가 없습니다.';
+      container.appendChild(emptyDiv);
+    }
+
+    fetch('/assist/select_my_history/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': App.draft.getCSRFToken(),
+      },
+      body: JSON.stringify({
+        user_id: currentUser.id
+      })
+    })
+    .then(response => {
+      if(!response.ok) {
+        throw new Error('서버 응답 오류');
+      }
+      return response.json();
+    })
+    .then(data => {
+      this.myHistoryData = [];
+
+      Object.entries(data).forEach(([key, valueArray]) => {
+        const obj = {};
+        obj['id'] = key;
+        obj['items'] = [];
+        obj['expanded'] = false;
+
+        valueArray.forEach((item, idx) => {
+          const valObj = {
+            id: item['id'],
+            title: item['title'],
+            content: item['content'],
+            template_id: item['template_id']
+          };
+          obj['items'].push(valObj);
+          if(idx === 0) {
+            obj['title'] = item['draft_main_name'];
+          }
+        });
+        
+        this.myHistoryData.push(obj);
+      });
+
+      const emptyDiv = document.querySelector('.empty-history');
+      emptyDiv.style.display = 'none';
+      
+      this.myHistoryData.forEach(group => {
+        const groupElement = this.createHistoryItemElement(group);
+        container.appendChild(groupElement);
+      })
+    })
+    .catch(error => {
+      console.error('저장 중 오류 발생:', error);
+      App.utils.showNotification('불러오는 도중 오류가 발생했습니다.');
+    })
   },
   
   // Team History 렌더링
   renderTeamHistory() {
     const container = document.getElementById('teamHistoryItems');
-    if (!container) return;
-    
     container.innerHTML = '';
     
-    this.data.teamHistory.forEach(team => {
-      const teamElement = this.createTeamGroupElement(team);
-      container.appendChild(teamElement);
-    });
+    fetch('/assist/select_team_history/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': App.draft.getCSRFToken(),
+      },
+      body: JSON.stringify({
+        user_id: currentUser.id
+      })
+    })
+    .then(response => {
+      if(!response.ok) {
+        throw new Error('서버 응답 오류');
+      }
+      return response.json();
+    })
+    .then(data => {
+      this.teamHistoryData = [];
+
+      var cnt = 1;
+      for(var dd=0; dd<data.length; dd++) {
+        let objs = data[dd];
+        Object.entries(objs).forEach(([key, valueArray]) => {
+                const obj = {};
+                obj['name'] = key + " 님";
+                obj['items'] = [];
+                obj['expanded'] = false;
+                obj['id'] = cnt;
+
+                valueArray.forEach((item, idx) => {
+                  if(item['id'] != undefined && item['title'] != undefined && item['content'] != undefined) {
+                      const valObj = {
+                      id: item['id'],
+                      title: item['title'],
+                      content: item['content']
+                    };
+                    obj['items'].push(valObj);
+                  } else {
+                    obj['items'] = []
+                  }
+                });
+                this.teamHistoryData.push(obj);
+                cnt ++ ;
+        });
+      }
+
+      this.teamHistoryData.forEach(team => {
+        const teamElement = this.createTeamGroupElement(team);
+        container.appendChild(teamElement);
+      })
+    })
+    .catch(error => {
+      console.error('저장 중 오류 발생:', error);
+      App.utils.showNotification('불러오는 도중 오류가 발생했습니다.');
+    })
   },
   
   // 히스토리 아이템 요소 생성
+  //${getEditIcon()}
+  //${getDeleteIcon()}
   createHistoryItemElement(group) {
     const itemDiv = document.createElement('div');
+    const latestItemId = group.items[group.items.length - 1]?.id;
     
     itemDiv.className = 'history-item';
     itemDiv.innerHTML = `
       <div class="history-item-header" onclick="App.history.toggleItem(this)">
-        <span class="item-title editable" onclick="App.history.editTitle(event, this)">${group.title}</span>
+        <span class="item-title editable" data-group-id="${group.id}" ondblclick="App.history.editTitle(event, this)">${group.title}</span>
         <div class="item-actions">
-          <button class="action-btn edit-btn" onclick="App.history.editItem(event, this, ${group.id})" title="수정">${getEditIcon()}</button>
-          <button class="action-btn delete-btn" onclick="App.history.deleteItem(event, this, ${group.id})" title="삭제">${getDeleteIcon()}</button>
+          <button class="action-btn edit-btn" onclick="App.history.editItem(event, this, ${group.id})" title="수정"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="action-btn delete-btn" onclick="App.history.deleteItem(event, this, ${group.id})" title="삭제"><i class="fa-solid fa-trash"></i></button>
           <button class="toggle-btn">${group.expanded ? '▼' : '▶'}</button>
         </div>
       </div>
       <div class="history-item-content ${group.expanded ? '' : 'collapsed'}">
         ${group.items.map(item => `
-          <div class="sub-item" onclick="App.history.loadItem(this, ${item.id})">
-            <span>${item.title}</span>
+          <div class="sub-item" data-group-id="${group.id}" onclick="App.history.loadItem(this, ${item.id})">
+            ${item.id === latestItemId ? `<span class="sub-item-select"><span class="latest-logo">new</span>&nbsp;&nbsp;&nbsp;&nbsp;${item.title}</span>` : `<span class="sub-item-select">${item.title}</span>`}
           </div>
         `).join('')}
       </div>
@@ -130,13 +190,13 @@ App.history = {
     const teamDiv = document.createElement('div');
     teamDiv.className = 'team-group';
     teamDiv.innerHTML = `
-      <div class="team-header" onclick="App.history.toggleTeamGroup(this, ${team.id})">
+      <div class="team-header" data-group-id="${team.id}" onclick="App.history.toggleTeamGroup(this, ${team.id})">
         <span>${team.name}</span>
         <button class="toggle-btn">${team.expanded ? '▲' : '▼'}</button>
       </div>
       <div class="team-content ${team.expanded ? '' : 'collapsed'}">
         ${team.items.map(item => `
-          <div class="team-item" onclick="App.history.viewTeamItem(this, ${item.id})">
+          <div class="team-item" data-group-id="${team.id}" onclick="App.history.viewTeamItem(this, ${item.id})">
             <span>${item.title}</span>
           </div>
         `).join('')}
@@ -157,7 +217,7 @@ App.history = {
     
     // 데이터 업데이트
     const title = element.querySelector('.item-title').textContent;
-    const group = this.data.myHistory.find(g => g.title === title);
+    const group = this.myHistoryData.find(g => g.title === title);
     if (group) {
       group.expanded = isCollapsed;
     }
@@ -178,12 +238,15 @@ App.history = {
       team.expanded = isCollapsed;
     }
   },
-  
-  // 제목 편집
-  editTitle(event, element) {
-    event.stopPropagation();
-    
+
+    // 제목 편집
+    activateInlineEdit(element, groupId) {
     const originalText = element.textContent;
+    console.log(originalText);
+
+    // 이미 input이 들어가 있다면 중복 방지
+    if (element.querySelector('input')) return;
+
     const input = document.createElement('input');
     input.type = 'text';
     input.value = originalText;
@@ -197,27 +260,63 @@ App.history = {
       color: #333;
       width: 100%;
     `;
-    
+
     element.innerHTML = '';
     element.appendChild(input);
     input.focus();
     input.select();
-    
+
     const saveEdit = () => {
       const newText = input.value.trim() || originalText;
       element.textContent = newText;
-      
-      // 데이터 업데이트
-      const group = this.data.myHistory.find(g => g.title === originalText);
-      if (group) {
-        group.title = newText;
+
+      const group = this.myHistoryData.find(g => String(g.id) === String(groupId));
+
+      if (!group || group.title === newText) {
+        if (group) alert("바뀐 제목이 없습니다.");
+        element.textContent = group?.title ?? originalText;
+        return;
       }
-      
-      App.utils.showNotification('제목이 수정되었습니다.');
+
+      if (newText.length > 20) {
+        alert("제목은 20자 내외로 설정해야 합니다.");
+        element.textContent = group.title;
+        return;
+      }
+
+      fetch('/assist/update_history_main_title/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify({
+          template_id: groupId,
+          title: newText
+        })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('서버 응답 오류');
+        return response.json();
+      })
+      .then(data => {
+        if (data.status === "success") {
+          App.utils.showNotification('제목이 수정되었습니다.');
+          group.title = newText;
+        } else {
+          App.utils.showNotification('오류가 발생했습니다.');
+          element.textContent = group.title;
+        }
+      })
+      .catch(error => {
+        console.error('저장 중 오류 발생:', error);
+        App.utils.showNotification('불러오는 도중 오류가 발생했습니다.');
+        element.textContent = group.title;
+      });
     };
-    
-    input.addEventListener('blur', saveEdit);
-    input.addEventListener('keypress', function(e) {
+
+    // input.addEventListener('blur', saveEdit);
+    input.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         saveEdit();
       } else if (e.key === 'Escape') {
@@ -225,11 +324,16 @@ App.history = {
       }
     });
   },
-  
-  // 히스토리 아이템 편집
+
+  editTitle(event, element) {
+    event.stopPropagation();
+    const groupId = element.dataset.groupId;
+    this.activateInlineEdit(element, groupId);
+  },
+
   editItem(event, element, groupId) {
     event.stopPropagation();
-    App.utils.showNotification('편집 기능이 구현될 예정입니다.');
+    this.activateInlineEdit(element, groupId);
   },
   
   // 히스토리 아이템 삭제
@@ -238,60 +342,116 @@ App.history = {
     
     if (confirm('이 항목을 삭제하시겠습니까?')) {
       // 데이터에서 삭제
-      this.data.myHistory = this.data.myHistory.filter(g => g.id !== groupId);
-      
-      // UI에서 제거
-      const historyItem = element.closest('.history-item');
-      historyItem.remove();
-      
-      App.utils.showNotification('항목이 삭제되었습니다.');
+      // this.myHistoryData = this.myHistoryData.filter(g => g.id !== groupId);
+
+      fetch('/assist/delete_history_main/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify({
+          template_id: groupId
+        })
+      })
+      .then(response => {
+        if(!response.ok) {
+          throw new Error('서버 응답 오류');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if(data.status == "success") {
+          App.utils.showNotification('항목이 삭제되었습니다.');
+          setTimeout(() => {
+            location.reload(); // 2초 후 새로고침
+          }, 2000);
+        } else {
+          App.utils.showNotification('오류가 발생했습니다.');
+        }
+      })
+      .catch(error => {
+        console.error('저장 중 오류 발생:', error);
+        App.utils.showNotification('불러오는 도중 오류가 발생했습니다.');
+      })
     }
   },
   
   // 히스토리 아이템 로드
   loadItem(element, itemId) {
     App.utils.showNotification('히스토리 아이템을 로드하고 있습니다...');
-    
-    // 시뮬레이션된 로드
-    setTimeout(() => {
-      const sampleContent = `# 로드된 특허 명세서
+    const groupId = element.dataset.groupId;
+    const group = this.myHistoryData.find(g => String(g.id) === groupId);
+    const latestItemId = group.items[group.items.length - 1]?.id;
 
-## 기술분야
-이것은 저장된 히스토리에서 로드된 특허 명세서 샘플입니다.
+    const foundItem = group.items.find(item => item.id === itemId);
+    console.log(foundItem);
 
-## 배경기술
-기존 기술의 한계점과 문제점을 설명합니다.
+    if(foundItem) {
+      // 시뮬레이션된 로드
+      setTimeout(() => {
+        const sampleContent = `# 로드된 특허 명세서 \n\n${foundItem.content}`;
 
-## 해결하려는 과제
-본 발명으로 해결하고자 하는 기술적 과제를 설명합니다.`;
+        if (App.draft) {
+          App.draft.display(sampleContent);
+          App.data.currentDraftContent = sampleContent;
+        }
+        App.utils.showNotification('히스토리 아이템이 로드되었습니다.');
+      }, 1000);
 
-      if (App.draft) {
-        App.draft.display(sampleContent);
-        App.data.currentDraftContent = sampleContent;
+      if (latestItemId === itemId) {
+        const buttons = document.querySelectorAll(
+          '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+        );
+
+        buttons.forEach(button => {
+          button.classList.add('dynamic-hover');
+          button.disabled = false;
+        });
+
+        console.log(itemId);
+        window.CURRENT_TEMPLATE_ID = foundItem.template_id;
       }
-      App.utils.showNotification('히스토리 아이템이 로드되었습니다.');
-    }, 1000);
+
+    } else {
+      App.utils.showNotification('해당 아이템을 찾을 수 없습니다.');
+    }
+  
   },
   
   // 팀 아이템 보기 (읽기 전용)
   viewTeamItem(element, itemId) {
-    App.utils.showNotification('팀 아이템을 불러오고 있습니다...');
+    const groupId = element.dataset.groupId;
+    const group = this.teamHistoryData.find(g => String(g.id) === groupId);
     
-    setTimeout(() => {
-      const sampleContent = `# 팀 공유 특허 명세서 (읽기 전용)
+    const foundItem = group.items.find(item => item.id === itemId);
 
-## 기술분야
-팀원이 작성한 특허 명세서입니다.
+    App.utils.showNotification('팀 아이템을 불러오고 있습니다...');
 
-## 배경기술
-이 문서는 읽기 전용으로 제공됩니다.`;
+    if(foundItem) {
+      // 시뮬레이션된 로드
+      setTimeout(() => {
+        const sampleContent = `# 팀 공유 특허 명세서 (읽기 전용) \n\n${foundItem.content}`;
 
-      if (App.draft) {
-        App.draft.display(sampleContent);
-        App.data.currentDraftContent = sampleContent;
-      }
-      App.utils.showNotification('팀 아이템이 로드되었습니다. (읽기 전용)');
-    }, 1000);
+        if (App.draft) {
+          App.draft.display(sampleContent);
+          App.data.currentDraftContent = sampleContent;
+        }
+        App.utils.showNotification('히스토리 아이템이 로드되었습니다.');
+      }, 1000);
+
+      const buttons = document.querySelectorAll(
+        '.draft_savebutton, .draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+      );
+
+      buttons.forEach(button => {
+        button.style.display = 'none';
+      });
+
+    } else {
+      App.utils.showNotification('해당 아이템을 찾을 수 없습니다.');
+    }
+
   },
   
   // 팀 히스토리 새로고침

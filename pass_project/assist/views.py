@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.db.models.functions import Substr, Cast
-from django.db.models import IntegerField
+from django.db.models import IntegerField, OuterRef, Subquery
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from .forms import TemplateForm
-from core.models import Template, Draft, User, Evaluation
+from core.models import Template, Draft, User, Evaluation, Team, TeamLog
 from django.template.loader import get_template
 from weasyprint import HTML, CSS
 from docx import Document
@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup, NavigableString
 from io import BytesIO
 import os
 import json
+from collections import defaultdict
 
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
@@ -335,6 +336,123 @@ def insert_evaluation_result(request):
                 return JsonResponse({'status': 'error', 'message': 'Draft not found [404]'})
         except Template.DoesNotExist:
             return JsonResponse({'status':'error', 'message': 'Template not found'})
+    return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
+
+@csrf_exempt
+def select_my_history(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+
+        try:
+            user = User.objects.get(username=user_id)
+            user_code = user.__dict__['user_code']
+
+            template = Template.objects.filter(user_code_id=user_code)
+            template_ids = template.values_list('template_id', flat=True)
+
+            drafts = Draft.objects.filter(template_id__in=template_ids).order_by('template_id', 'version')
+
+            grouped = defaultdict(list)
+            for draft in drafts:
+                grouped[draft.template_id].append({
+                    'id': draft.draft_id,
+                    'template_id': draft.template_id,
+                    'version': draft.version,
+                    'draft_main_name': draft.draft_name,
+                    'title': draft.draft_title,
+                    'content': draft.create_draft
+                })
+            return JsonResponse(grouped, safe=False)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
+
+@csrf_exempt
+def select_team_history(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+
+        try:
+            user = User.objects.get(username=user_id)
+            user_code = user.__dict__['user_code']
+
+            teamLog = TeamLog.objects.filter(user_code=user_code)
+
+            team_id_list = []
+            user_code_list = []
+            team_group_list = []
+            for tl in teamLog:
+                if tl not in team_id_list:
+                    team_id_list.append(tl.team_id_id)
+
+            for ti in team_id_list:
+                teamLogUser = TeamLog.objects.filter(team_id_id=ti)
+                teamName = Team.objects.get(team_id=ti)
+
+                for tlu in teamLogUser:
+                    user_code_list.append(tlu.user_code_id)
+
+                if len(user_code_list) != 0:
+                    for ucl in user_code_list:
+                        userInfo = User.objects.get(user_code=ucl)
+                        templates = Template.objects.filter(user_code_id=ucl)
+                        template_ids = templates.values_list('template_id', flat=True)
+
+                        latest_draft_subquery = Draft.objects.filter(template_id=OuterRef('template_id')).order_by('-version')
+                        drafts = Draft.objects.filter(template_id__in=template_ids,
+                                                      version=Subquery(latest_draft_subquery.values('version')[:1])).order_by('template_id', 'version')
+                        
+                        team_grouped = defaultdict(list)
+
+                        if len(drafts) == 0:
+                            team_grouped[userInfo.username].append({
+                                'userId': userInfo.username,
+                                'user_nickname': userInfo.user_nickname
+                            })
+                        
+                        for draft in drafts:
+                            team_grouped[userInfo.username].append({
+                                'id': draft.draft_id,
+                                'template_id': draft.template_id,
+                                'version': draft.version,
+                                'draft_main_name': draft.draft_name,
+                                'title': draft.draft_title,
+                                'content': draft.create_draft,
+                                'userId': userInfo.username,
+                                'user_nickname': userInfo.user_nickname
+                            })
+                        team_group_list.append(team_grouped)
+
+            return JsonResponse(team_group_list, safe=False)
+        except TeamLog.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
+
+@csrf_exempt
+def update_history_main_title(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        Draft.objects.filter(template_id=data.get("template_id")).update(draft_name=data.get("title"))
+
+        Template.objects.filter(template_id=data.get("template_id")).update(template_title=data.get("title"))
+
+        return JsonResponse({'status': 'success', 'message': '수정 완료'})
+    return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
+
+@csrf_exempt
+def delete_history_main(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        template_id = data.get("template_id")
+        Draft.objects.filter(template_id=template_id).delete()
+        Template.objects.filter(template_id=template_id).delete()
+
+        return JsonResponse({'status': 'success', 'message': '삭제 완료! '})
+
     return JsonResponse({'status':'error', 'message': "Invalid request [400]"})
 
 def qa_view(request):

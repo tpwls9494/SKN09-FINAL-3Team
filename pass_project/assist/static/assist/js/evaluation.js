@@ -78,7 +78,9 @@ App.evaluation = {
       })
       .then(data => {
         console.log('서버 응답: ', data);
-        App.utils.showNotification('AI 평가가 완료되었습니다.');
+        if (data != undefined) {
+          App.utils.showNotification('AI 평가가 완료되었습니다.');
+        }
       })
       .catch(error => {
         console.error("저장 중 오류 발생:", error);
@@ -275,6 +277,8 @@ App.evaluation = {
   },
 
   showRecommendationButtons() {
+    if (!App.data.isEvaluationMode) return;
+
     const container = document.getElementById("after-eval");
 
     const panelTitle = document.getElementById('eval-header');

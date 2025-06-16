@@ -314,11 +314,7 @@ def delete_user_from_group(request):
         user = User.objects.get(user_code=user_code)
         team = Team.objects.get(team_id=team_id)
 
-        TeamLog.objects.create(
-             team_id=team,
-            user_code=user,
-        
-        )
+        TeamLog.objects.filter(team_id=team, user_code=user).delete()
 
         return JsonResponse({"success": True, "message": f"{username} 그룹 제거 완료"})
 

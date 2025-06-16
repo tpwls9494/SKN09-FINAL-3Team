@@ -242,7 +242,8 @@ body {
   display: flex;
   /* justify-content: center; */
   margin-top: auto;
-  padding-top: 20px;
+  /* padding-top: 20px; */
+  padding-top: 0px;
   gap: 15px;
   flex-wrap: wrap;
   flex-shrink: 0;

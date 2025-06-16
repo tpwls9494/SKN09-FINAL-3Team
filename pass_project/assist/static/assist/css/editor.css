@@ -64,7 +64,6 @@
 .history-content {
   padding: 20px;
   height: 100%;
-  overflow-y: auto;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -79,6 +78,7 @@
 /* 히스토리 섹션 스타일 */
 .history-section {
   margin-bottom: 30px;
+  height: 230px;
 }
 
 .section-header {
@@ -100,9 +100,9 @@
   background: none;
   border: none;
   color: #666;
-  font-size: 12px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   border-radius: 4px;
   transition: all 0.3s ease;
 }
@@ -116,13 +116,14 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  height: 200px;
 }
 
 .history-item {
   background-color: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
-  overflow: hidden;
 }
 
 .history-item-header {
@@ -200,7 +201,7 @@
 .history-item-content {
   padding: 0 15px 12px 15px;
   max-height: 200px;
-  overflow: hidden;
+  overflow-y: auto;
   transition: all 0.3s ease;
 }
 
@@ -226,6 +227,15 @@
 .sub-item:hover {
   background-color: #e3f2fd;
   border-color: #0F1E46;
+}
+
+.sub-item-select {
+  cursor: pointer;
+}
+
+.latest-logo {
+  font-weight: bold;
+  color: #ff3838;
 }
 
 .sub-icon {
@@ -274,6 +284,17 @@
 
 .history-panel.collapsed + .work-area {
   padding-left: 20px;
+}
+
+.empty-history {
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 280px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #797979;
 }
 
 /*footer*/
@@ -768,8 +789,8 @@
 
 .team-content {
   padding: 0 15px 12px 15px;
-  max-height: 200px;
-  overflow: hidden;
+  height: 210px;
+  overflow-y: auto;
   transition: all 0.3s ease;
 }
 
@@ -801,6 +822,11 @@
 .team-icon {
   font-size: 12px;
   color: #ffc107;
+}
+
+#draftContent {
+  height: 530px;
+  overflow-y:auto;
 }
 
 /* 반응형 디자인 */

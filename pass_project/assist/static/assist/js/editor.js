@@ -21,23 +21,6 @@ const AppState = {
   currentDraftContent: '',
   isEvaluationMode: false,
   historyData: {
-    myHistory: [
-      {
-        id: 1,
-        title: '항공업 자동 예약 시스템',
-        items: [
-          { id: 11, title: '생성된 특허 명세서 초안 1', content: '...' },
-          { id: 12, title: '생성된 특허 명세서 초안 2', content: '...' }
-        ],
-        expanded: true
-      },
-      {
-        id: 2,
-        title: '최적화된 항공 혼잡 해결...',
-        items: [{ id: 21, title: '특허 명세서 초안', content: '...' }],
-        expanded: false
-      }
-    ],
     teamHistory: [
       {
         id: 1,
@@ -588,19 +571,19 @@ const HistoryManager = {
     };
     
     AppState.historyData.myHistory.unshift(newItem);
-    this.renderMyHistory();
+    //this.renderMyHistory();
     //Utils.showNotification('히스토리에 저장되었습니다.');
   },
 
-  renderMyHistory() {
-    const container = Utils.$('#myHistoryItems');
-    if (!container) return;
+  // renderMyHistory() {
+  //   const container = Utils.$('#myHistoryItems');
+  //   if (!container) return;
     
-    container.innerHTML = '';
-    AppState.historyData.myHistory.forEach(group => {
-      container.appendChild(this.createHistoryItemElement(group));
-    });
-  },
+  //   container.innerHTML = '';
+  //   AppState.historyData.myHistory.forEach(group => {
+  //     container.appendChild(this.createHistoryItemElement(group));
+  //   });
+  // },
 
   createHistoryItemElement(group) {
     const itemDiv = document.createElement('div');
@@ -841,7 +824,7 @@ const requestAI = AIFeatures.requestModification.bind(AIFeatures);
 // ========== 페이지 초기화 ==========
 document.addEventListener('DOMContentLoaded', function() {
   initializeEventListeners();
-  HistoryManager.renderMyHistory();
+  //HistoryManager.renderMyHistory();
   
   // 기존 초기화 함수들 호출 (다른 파일에서 정의된 경우)
   if (typeof setupHeaderTrigger === 'function') setupHeaderTrigger();
