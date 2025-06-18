@@ -11,8 +11,12 @@ urlpatterns = [
     path('update_history_main_title/', views.update_history_main_title, name='update_history_main_title'),
     path('delete_history_main/', views.delete_history_main, name='delete_history_main'),
 
-    path('qa/', views.qa_view, name='qa'),
+    # qa page
+    path('qa/', views.qa_page, name='qa_page'),
+    path('api/qa/ask/', views.qa_ask, name='qa_ask'),
+    path('api/qa/test/', views.qa_test_connection, name='qa_test'),
 
+    # download
     path('download/pdf/<int:draft_id>/', views.download_pdf, name='download_pdf'),
     path('download/docx/<int:draft_id>/', views.download_docx, name='download_docx'),
     path('download/hwp/<int:draft_id>/', views.download_hwp, name='download_hwp'),

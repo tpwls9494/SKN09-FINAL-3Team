@@ -556,21 +556,21 @@ const DraftRenderer = {
 // ========== 히스토리 관리 ==========
 const HistoryManager = {
   addToHistory(techName) {
-    const newId = Math.max(...AppState.historyData.myHistory.map(h => h.id), 0) + 1;
-    const timestamp = Utils.getTimestamp();
+    //const newId = Math.max(...AppState.historyData.myHistory.map(h => h.id), 0) + 1;
+    //const timestamp = Utils.getTimestamp();
     
-    const newItem = {
-      id: newId,
-      title: techName || '새로운 특허 명세서',
-      items: [{
-        id: newId * 10 + 1,
-        title: `생성된 특허 명세서 초안 - ${timestamp}`,
-        content: AppState.currentDraftContent
-      }],
-      expanded: true
-    };
+    //const newItem = {
+    //  id: newId,
+    //  title: techName || '새로운 특허 명세서',
+    //  items: [{
+    //    id: newId * 10 + 1,
+    //    title: `생성된 특허 명세서 초안 - ${timestamp}`,
+    //    content: AppState.currentDraftContent
+    //  }],
+    // expanded: true
+    //};
     
-    AppState.historyData.myHistory.unshift(newItem);
+    //AppState.historyData.myHistory.unshift(newItem);
     //this.renderMyHistory();
     //Utils.showNotification('히스토리에 저장되었습니다.');
   },

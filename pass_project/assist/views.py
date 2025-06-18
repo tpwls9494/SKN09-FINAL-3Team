@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from weasyprint import HTML, CSS
 from docx import Document
 from bs4 import BeautifulSoup, NavigableString
+from collections import defaultdict
 from io import BytesIO
 import requests
 import os
@@ -241,7 +242,10 @@ def insert_patent_report(request):
         if data['sc_flag'] == 'create':
             try:
                 with transaction.atomic():
+                    user_id = data.get("user_id")
+                    user = User.objects.get(username=user_id)
                     template = Template.objects.create(
+                        user_code = user,
                         tech_name=data.get("tech_name"),
                         tech_description=data.get("tech_description"),
                         problem_solved=data.get("problem_solved"),
@@ -645,98 +649,127 @@ def download_hwp(request, draft_id):
     draft = get_object_or_404(Draft, draft_id=draft_id)
     
     # HWP 라이브러리가 없으므로 텍스트 파일로 대체
-    content = f"{draft.__dict__["draft_name"]}\n\n{draft.__dict__["create_draft"]}"
+    content = f"{draft.__dict__['draft_name']}\n\n{draft.__dict__['create_draft']}"
     
     response = HttpResponse(content, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__["draft_title"]}.txt"'
     return response
-    
+   
+# views.py의 QA 관련 부분 (최종 버전)
+
+import logging
+import json
+from collections import defaultdict
+from django.shortcuts import render
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from .rag_client import rag_client
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------
-#  FastAPI QA 서버 연결 설정
+#  QA 관련 함수들
 # ---------------------------------------------------------------------
-FASTAPI_BASE_URL = getattr(settings, "RAG_SERVER_URL", "http://localhost:7860")
-FASTAPI_QA_URL   = f"{FASTAPI_BASE_URL}/api/qwen/qa"
 
-def call_fastapi_qa(question: str, max_new_tokens: int = 512) -> str:
-    """
-    FastAPI 서버의 /api/qwen/qa 엔드포인트로 질문을 보내고
-    HTML 형식 답변을 그대로 반환한다.
-    """
-    try:
-        resp = requests.post(
-            FASTAPI_QA_URL,
-            json={"query": question, "max_new_tokens": max_new_tokens},
-            timeout=60
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data.get("answer", "<p>답변을 가져오지 못했습니다.</p>")
-    except Exception as exc:
-        logger.error("FastAPI QA 호출 실패: %s", exc)
-        return (
-            "<p>QA 서버와의 통신에 실패했습니다. "
-            "잠시 후 다시 시도해 주세요.</p>"
-        )
-
-# ---------------------------------------------------------------------
-#  Q&A  View
-# ---------------------------------------------------------------------
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
-def qa_view(request):
-    """
-    GET  → Q&A 페이지 렌더링
-    POST → FastAPI QA 모델 호출 후 JSON 응답
-    """
-    if request.method == "GET":
-        return render(request, "assist/qa.html")
+@require_http_methods(["GET"])
+def qa_page(request):
+    """Q&A 페이지 렌더링"""
+    return render(request, "assist/qa.html")
 
-    # POST(JSON)
-    if request.headers.get("Content-Type", "").startswith("application/json"):
-        try:
-            payload  = json.loads(request.body)
-            question = payload.get("question", "").strip()
-
-            if not question:
-                return JsonResponse(
-                    {"success": False, "message": "질문을 입력해 주세요."},
-                    status=400,
-                )
-
-            answer_html = call_fastapi_qa(question)
-
+@csrf_exempt
+@require_http_methods(["POST"])
+def qa_ask(request):
+    """Qwen3-8B 모델을 사용한 질문 답변 API"""
+    try:
+        # JSON 요청 확인
+        if not request.headers.get("Content-Type", "").startswith("application/json"):
             return JsonResponse(
-                {
-                    "success": True,
-                    "answer": answer_html,
-                    "message": "답변이 생성되었습니다.",
-                }
+                {"success": False, "message": "application/json Content-Type이 필요합니다."},
+                status=415
             )
 
+        # 요청 데이터 파싱
+        try:
+            payload = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse(
-                {"success": False, "message": "잘못된 JSON 형식입니다."}, status=400
+                {"success": False, "message": "잘못된 JSON 형식입니다."},
+                status=400
             )
-        except Exception as exc:
-            logger.error("qa_view 예외: %s", exc)
+
+        question = payload.get("question", "").strip()
+        max_new_tokens = payload.get("max_new_tokens", 512)
+
+        if not question:
             return JsonResponse(
-                {"success": False, "message": str(exc)}, status=500
+                {"success": False, "message": "질문을 입력해 주세요."},
+                status=400,
             )
 
-    # 기타 Content-Type
-    return JsonResponse(
-        {"success": False, "message": "지원하지 않는 Content-Type"}, status=415
-    )
+        # rag_client를 통해 QA 요청
+        answer_html = rag_client.generate_qa_answer(question, max_new_tokens)
 
-# RAG 서버 연결
+        return JsonResponse(
+            {
+                "success": True,
+                "answer": answer_html,
+                "question": question,
+                "message": "답변이 생성되었습니다.",
+            }
+        )
+
+    except Exception as exc:
+        logger.error("qa_ask 예외: %s", exc)
+        return JsonResponse(
+            {"success": False, "message": f"서버 오류: {str(exc)}"},
+            status=500
+        )
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def qa_test_connection(request):
+    """QA 서버 연결 테스트"""
+    try:
+        # 기존 health_check 재사용
+        health_result = rag_client.health_check()
+
+        if health_result.get("status") == "error":
+            return JsonResponse({
+                "status": "error",
+                "message": f"QA 서버 연결 실패: {health_result.get('message')}",
+                "server_url": rag_client.base_url
+            }, status=500)
+
+        # 간단한 QA 테스트
+        test_answer = rag_client.generate_qa_answer("연결 테스트", 50)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "QA 서버 연결 성공",
+            "server_url": rag_client.base_url,
+            "health_check": health_result,
+            "test_answer": test_answer[:100] + "..." if len(test_answer) > 100 else test_answer
+        })
+
+    except Exception as e:
+        logger.error(f"QA 서버 연결 테스트 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": f"QA 서버 연결 실패: {str(e)}",
+            "server_url": rag_client.base_url
+        }, status=500)
+
+# ---------------------------------------------------------------------
+#  기존 RAG 관련 함수들 (변경 없음)
+# ---------------------------------------------------------------------
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def test_rag_connection(request):
     """RAG 서버 연결 테스트"""
     try:
-        # 헬스체크
         health = rag_client.health_check()
         return JsonResponse({
             "status": "success",
@@ -750,11 +783,10 @@ def test_rag_connection(request):
             "message": str(e)
         }, status=500)
 
-# 한번에
 @csrf_exempt
 @require_http_methods(["POST"])
 def ask_question(request):
-    """질문하기 API"""
+    """질문하기 API (RAG)"""
     if request.method == "GET":
         return JsonResponse({"message": "POST 요청을 사용하세요"})
 
@@ -790,7 +822,6 @@ def ask_question(request):
             "message": str(e)
         }, status=500)
 
-# 스트리밍
 @csrf_exempt
 @require_http_methods(["GET"])
 def ask_question_stream(request):
