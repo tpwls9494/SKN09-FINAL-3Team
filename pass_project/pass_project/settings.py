@@ -20,6 +20,8 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 환경변수로 개발/운영 모드 구분 
+DEV = os.getenv("DJANGO_DEVELOPMENT") == "1"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -45,10 +47,13 @@ INSTALLED_APPS = [
     'core',
     'accounts', 
     'user_admin',
+    'corsheaders',
     'assist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',      # 맨 앞
+    'django.middleware.common.CommonMiddleware',  # 그 다음
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,6 +65,16 @@ MIDDLEWARE = [
 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# 모든 출처 허용 (개발용)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# 기본 허용 헤더 + SSE에서 오는 text/event-stream 을 허용
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'text/event-stream',
 ]
 
 ROOT_URLCONF = 'pass_project.urls'
@@ -85,29 +100,37 @@ WSGI_APPLICATION = 'pass_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#RDS 추가 전
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'passdb',  # 데이터베이스 이름
-#         'USER': 'root',        # MySQL 사용자
-#         'PASSWORD': '1234', # MySQL 비밀번호
-#         'HOST': '127.0.0.1',   # 로컬 호스트
-#         'PORT': '3306',        # MySQL 포트
-#     }
-# }
-# RDS 추가 후
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'passdb',  # RDS에서 생성한 DB 이름
-        'USER': 'admin',   # RDS 생성 시 설정한 사용자
-        'PASSWORD': '11111111',  # RDS 사용자 비밀번호 아닐시 Pass7276!
-        'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',  # RDS 엔드포인트
-        'PORT': '3306',
+if DEV:
+    # 로컬 개발용 DB (MySQL 또는 SQLite 선택)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'passdb',
+            'USER': 'root',
+            'PASSWORD': '1234',
+            'HOST': '127.0.0.1',
+            'PORT': '3306',
+        }
     }
-}
-
+    # 또는 SQLite 한 줄로…
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.sqlite3',
+    #         'NAME': BASE_DIR / 'db.sqlite3',
+    #     }
+    # }
+else:
+    # 운영(RDS)용 DB
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'passdb',
+            'USER': 'admin',
+            'PASSWORD': '11111111',
+            'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',
+            'PORT': '3306',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -201,6 +224,8 @@ LOGGING = {
         },
     },
 }
+
+FASTAPI_BASE_URL  = "https://4gz2mlt3fj6myv-7860.proxy.runpod.net"
 
 # logs 디렉토리가 없으면 생성
 import os

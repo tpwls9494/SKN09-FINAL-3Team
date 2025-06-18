@@ -1,3 +1,5 @@
+const fastApiUrl = 'https://4gz2mlt3fj6myv-7860.proxy.runpod.net/api/qwen/assist-stream';
+
 // 템플릿 관리 전용 모듈
 (function() {
   'use strict';
@@ -44,10 +46,12 @@
   // 템플릿 초기화
   function initializeTemplate() {
     const templateForm = document.getElementById('templateForm');
+    console.log('▶ initializeTemplate, form=', templateForm);
     if (!templateForm) return;
     
     // 이벤트 리스너 등록
     templateForm.addEventListener('submit', handleFormSubmit);
+    console.log('▶ submit listener registered');
     
     // 출원인 구분 이벤트
     document.querySelectorAll('input[name="applicant_type"]').forEach(radio => {
@@ -172,17 +176,47 @@
       console.log(msg);
     }
   }
-
-  // ========== 기존 기능들 (최소화) ==========
   
-  // 폼 제출
-  function handleFormSubmit(event) {
-    event.preventDefault();
-    const formData = collectFormData();
-    if (validateForm(formData)) {
-      generateDraft(formData);
+async function handleFormSubmit(event) {
+  event.preventDefault();
+  const formData = collectFormData();
+  if (!validateForm(formData)) return;
+
+  App.utils.showNotification('AI가 초안을 생성 중입니다…');
+
+  // JSON → URL 인코딩
+  const query = encodeURIComponent(JSON.stringify(formData));
+  const url   = `${fastApiUrl}?query=${query}&max_new_tokens=32768`;
+
+  const evtSource = new EventSource(url);
+
+  const draftContainer = document.getElementById('draftContent');
+  draftContainer.innerText    = '';
+  draftContainer.style.display = 'block';
+
+  evtSource.onmessage = evt => {
+    // evt.data 가 이미 JSON 문자열만 들어있습니다.
+    const data = JSON.parse(evt.data);
+    if (data.type === 'token') {
+      draftContainer.innerText += data.content;
     }
-  }
+    else if (data.type === 'done') {
+      App.utils.showNotification('AI 생성 완료.');
+      evtSource.close();
+      saveFinalDraft(draftContainer.innerText, formData);
+    }
+    else if (data.type === 'error') {
+      App.utils.showNotification('AI 생성 중 오류: ' + data.message);
+      evtSource.close();
+    }
+  };
+
+  evtSource.onerror = err => {
+    console.error('SSE 에러', err);
+    App.utils.showNotification('스트리밍 연결 오류');
+    evtSource.close();
+  };
+}
 
   // 폼 데이터 수집
   function collectFormData() {
@@ -206,40 +240,32 @@
   }
 
   // db 저장 로직 추가
-  function saveTemplates(formData) {
-    fetch('/assist/insert_patent_report/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': App.draft.getCSRFToken(),
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => {
-      if(!response.ok) {
-        throw new Error('서버 응답 오류');
-      }
-      return response.json();
-    })
-    .then(data => {
-      window.CURRENT_TEMPLATE_ID = data.template_id;
-      App.data.currentDraftId = data.draft_id;
-      App.utils.showNotification(`특허명세서로 변환 되었습니다.`);
+async function saveTemplates(formData) {
+  const res = await fetch('/assist/insert_patent_report/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': App.draft.getCSRFToken(),
+    },
+    body: JSON.stringify(formData)
+  });
+  if (!res.ok) throw new Error('저장 실패');
+  const data = await res.json();
 
-      const buttons = document.querySelectorAll(
-        '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
-      );
+  window.CURRENT_TEMPLATE_ID = data.template_id;
+  App.data.currentDraftId   = data.draft_id;
 
-      buttons.forEach(button => {
-        button.classList.add('dynamic-hover');
-        button.disabled = false;
-      });
-    })
-    .catch(error => {
-      console.error('저장 중 오류 발생:', error);
-      App.utils.showNotification('저장 중 오류가 발생했습니다.');
-    })
-  }
+  // 버튼 활성화
+  document.querySelectorAll(
+    '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+  ).forEach(btn => {
+    btn.disabled = false;
+    btn.classList.add('dynamic-hover');
+  });
+
+  return data;
+}
+
 
   function getVal(id) {
     return document.getElementById(id)?.value || '';
@@ -297,34 +323,35 @@
     return true;
   }
 
-  // Draft 생성 (다른 모듈 활용)
-  function generateDraft(formData) {
-    const content = createContent(formData);
+  // // Draft 생성 (다른 모듈 활용)
+  // function generateDraft(formData) {
+  //   //const content = createContent(formData);
+  //   formData.create_draft = content;
 
-    formData['sc_flag'] = 'create';
-    formData['version'] = 'v0';
-    formData['create_draft'] = content;
-    formData['user_id'] = currentUserInfo.id;
+  //   formData['sc_flag'] = 'create';
+  //   formData['version'] = 'v0';
+  //   formData['create_draft'] = content;
+  //   formData['user_id'] = currentUserInfo.id;
     
-    window.currentDraftContent = content;
-    if (App.data) App.data.currentDraftContent = content;
+  //   window.currentDraftContent = content;
+  //   if (App.data) App.data.currentDraftContent = content;
     
-    // App.draft.display 우선 사용
-    if (App.draft?.display) {
-      App.draft.display(content);
-    } else {
-      showSimpleDraft(content);
-    }
+  //   // App.draft.display 우선 사용
+  //   if (App.draft?.display) {
+  //     App.draft.display(content);
+  //   } else {
+  //     showSimpleDraft(content);
+  //   }
     
-    saveTemplates(formData);
+  //   saveTemplates(formData);
 
-    // 히스토리에 추가
-    if (App.history?.addToHistory) {
-      App.history.addToHistory(formData.tech_name);
-    }
+  //   // 히스토리에 추가
+  //   if (App.history?.addToHistory) {
+  //     App.history.addToHistory(formData.tech_name);
+  //   }
     
-    showMessage('특허 명세서 초안이 생성되었습니다.');
-  }
+  //   showMessage('특허 명세서 초안이 생성되었습니다.');
+  // }
 
   // 간단한 Draft 표시 (fallback)
   function showSimpleDraft(content) {
@@ -344,54 +371,54 @@
     }
   }
 
-  // 간단한 콘텐츠 생성
-  function createContent(data) {
-    const title = data.tech_name.trim() || '혁신적인 기술 시스템';
-    return `# 발명의 명칭
-${title}
+//   // 간단한 콘텐츠 생성
+//   function createContent(data) {
+//     const title = data.tech_name.trim() || '혁신적인 기술 시스템';
+//     return `# 발명의 명칭
+// ${title}
 
-## 기술분야
-${data.tech_description}
+// ## 기술분야
+// ${data.tech_description}
 
-## 배경기술
-${data.problem_solved}
+// ## 배경기술
+// ${data.problem_solved}
 
-## 해결하려는 과제
-${data.problem_solved}
+// ## 해결하려는 과제
+// ${data.problem_solved}
 
-## 과제의 해결 수단
-${data.tech_differentiation}
+// ## 과제의 해결 수단
+// ${data.tech_differentiation}
 
-${data.application_field ? `\n## 활용 분야\n${data.application_field}\n` : ''}
+// ${data.application_field ? `\n## 활용 분야\n${data.application_field}\n` : ''}
 
-## 발명의 효과
-본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
-- 성능 향상: 기존 기술 대비 현저히 향상된 성능 및 효율성
-- 경제성 개선: 비용 효율적인 솔루션 제공
-- 사용자 편의성: 직관적이고 사용하기 쉬운 인터페이스
+// ## 발명의 효과
+// 본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
+// - 성능 향상: 기존 기술 대비 현저히 향상된 성능 및 효율성
+// - 경제성 개선: 비용 효율적인 솔루션 제공
+// - 사용자 편의성: 직관적이고 사용하기 쉬운 인터페이스
 
-## 발명을 실시하기 위한 구체적인 내용
+// ## 발명을 실시하기 위한 구체적인 내용
 
-### 주요 구성 요소
-${data.components_functions}
+// ### 주요 구성 요소
+// ${data.components_functions}
 
-### 구현 방식
-${data.implementation_example}
+// ### 구현 방식
+// ${data.implementation_example}
 
-${data.drawing_description ? `\n### 도면의 간단한 설명\n${data.drawing_description}\n` : ''}
+// ${data.drawing_description ? `\n### 도면의 간단한 설명\n${data.drawing_description}\n` : ''}
 
-## 특허청구범위
-**청구항 1**: ${title}에 있어서, 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
+// ## 특허청구범위
+// **청구항 1**: ${title}에 있어서, 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
 
----
-### 출원인
-${data.applicant_info.type === 'corporation' ? 
-  `**법인명**: ${data.applicant_info.corporation_name}\n**대표자**: ${data.applicant_info.representative_name}` :
-  `**성명**: ${data.applicant_info.name}`}
+// ---
+// ### 출원인
+// ${data.applicant_info.type === 'corporation' ? 
+//   `**법인명**: ${data.applicant_info.corporation_name}\n**대표자**: ${data.applicant_info.representative_name}` :
+//   `**성명**: ${data.applicant_info.name}`}
 
-### 발명자
-${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name} **주소**: ${inv.address}`).join('\n')}`;
-  }
+// ### 발명자
+// ${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name} **주소**: ${inv.address}`).join('\n')}`;
+//   }
 
   // 출원인 구분 토글
   function toggleApplicantType() {

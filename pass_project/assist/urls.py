@@ -32,4 +32,8 @@ urlpatterns = [
     #스트리밍
     path('api/ask-stream/', views.ask_question_stream, name='ask_question_stream'),
     path('demo-stream/', views.rag_demo_stream, name='rag_demo_stream'),
+
+    # assist
+    path('api/assist/ask/', views.assist_ask, name='assist_ask'),
+    path('api/qwen/assist-stream/', views.assist_stream, name='assist_stream'),
 ]

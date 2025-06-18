@@ -58,3 +58,4 @@ INFO 2025-06-17 16:05:01,505 rag_client 7 139662044195712 QA 요청 시작: 특�
 INFO 2025-06-17 16:05:20,689 rag_client 7 139662044195712 QA 응답 완료 (소요시간: 19.18초)
 ERROR 2025-06-18 08:44:22,515 rag_client 7 139903468395392 QA HTTP 오류: 404 Client Error: Not Found for url: https://4gz2mlt3fj6myv-7860.proxy.runpod.net/api/qwen/qa
 ERROR 2025-06-18 17:39:45,466 rag_client 7 140166443248512 QA 요청 실패: HTTPSConnectionPool(host='4gz2mlt3fj6myv-7860.proxy.runpod.net', port=443): Max retries exceeded with url: /api/qwen/qa (Caused by ResponseError('too many 502 error responses'))
+ERROR 2025-06-18 23:55:26,361 rag_client 28208 28096 QA HTTP ����: 404 Client Error: Not Found for url: https://4gz2mlt3fj6myv-7860.proxy.runpod.net/api/qwen/qa

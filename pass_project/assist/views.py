@@ -19,7 +19,27 @@ import requests
 import os
 import json
 from .rag_client import rag_client
+from .assist_client import assist_client
 import logging
+
+
+def ai_edit(draft_text, prompt):
+    # prompt + draft_text 를 합친 뒤 Assist 모델로 보내는 예시
+    full_prompt = f"{prompt}\n\n{draft_text}"
+    return assist_client.generate_assist_answer(full_prompt)
+
+def ai_evaluate(draft_text):
+    # 평가를 위한 프롬프트 템플릿
+    eval_prompt = f"이 초안을 평가해줘:\n\n{draft_text}"
+    return assist_client.generate_assist_answer(eval_prompt)
+
+def ai_generate_draft(template_data):
+    # 지금 쓰던 mock_ai_generate_draft 대신
+    # template_data 를 JSON 직렬화해서 Assist 모델에 넘길 수도 있고
+    # 또는 미리 만든 마크다운 뼈대(prompt)를 넘기면 됩니다.
+    prompt = f"다음 템플릿을 보고 초안을 작성해줘:\n\n{json.dumps(template_data)}"
+    return assist_client.generate_assist_answer(prompt, max_new_tokens=4096)
+
 
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
@@ -832,3 +852,85 @@ def rag_status(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
+#===========================================
+
+# assist
+
+import logging
+import time
+from django.http import JsonResponse
+from .assist_client import assist_client
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def assist_ask(request):
+    logger.debug("▶ assist_ask called, method=%s, body=%s", request.method, request.body)
+    start = time.time()
+    try:
+        data = json.loads(request.body)
+        prompt = data.get("prompt", "")
+        max_new_tokens = data.get("max_new_tokens", 32768)
+
+        # 실제 모델 호출
+        answer = assist_client.generate_assist_answer(prompt, max_new_tokens)
+        elapsed = time.time() - start
+
+        logger.debug("◀ assist_ask returning (%.2fs): %s", elapsed, answer[:200])
+
+        return JsonResponse({
+            "success": True,
+            "answer": answer,
+            "prompt": prompt,
+            "time": elapsed,
+        })
+    except Exception as e:
+        elapsed = time.time() - start
+        logger.exception("❌ assist_ask exception after %.2fs", elapsed)
+        return JsonResponse({
+            "success": False,
+            "error": str(e),
+            "time": elapsed,
+        }, status=500)
+    
+def assist_stream(request):
+    query = request.GET.get("query", "").strip()
+    max_new = request.GET.get("max_new_tokens", "512")
+
+    if not query:
+        return StreamingHttpResponse(
+            "data: {\"type\":\"error\",\"message\":\"query가 필요합니다.\"}\n\n",
+            content_type="text/event-stream; charset=utf-8",
+        )
+
+    # RunPod FastAPI SSE URL
+    upstream_url = f"{settings.FASTAPI_BASE_URL}/api/qwen/assist-stream"
+    params = {
+        "query": query,
+        "max_new_tokens": max_new
+    }
+
+    def event_generator():
+        try:
+            resp = requests.get(upstream_url, params=params, stream=True, timeout=300)
+            resp.raise_for_status()
+            for raw in resp.iter_lines(decode_unicode=True):
+                if not raw:
+                    continue
+                # FastAPI 쪽에서 이미 "data: {...}" 형태로 내려온다고 가정
+                # 그대로 내려보내기만 하면 됩니다.
+                yield raw + "\n\n"
+        except Exception as e:
+            err = json.dumps({"type": "error", "message": str(e)})
+            yield f"data: {err}\n\n"
+
+    response = StreamingHttpResponse(
+        event_generator(),
+        content_type="text/event-stream; charset=utf-8",
+    )
+    # 버퍼링 방지, hop-by-hop 헤더 덮어쓰기
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    response["Connection"] = "keep-alive"
+    return response
