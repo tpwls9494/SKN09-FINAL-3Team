@@ -304,6 +304,7 @@
     formData['sc_flag'] = 'create';
     formData['version'] = 'v0';
     formData['create_draft'] = content;
+    formData['user_id'] = currentUserInfo.id;
     
     window.currentDraftContent = content;
     if (App.data) App.data.currentDraftContent = content;
