@@ -40,6 +40,49 @@ def ai_generate_draft(template_data):
     prompt = f"다음 템플릿을 보고 초안을 작성해줘:\n\n{json.dumps(template_data)}"
     return assist_client.generate_assist_answer(prompt, max_new_tokens=4096)
 
+# — ai_edit —
+@csrf_exempt
+@require_POST
+def assist_edit(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    prompt     = data.get("prompt", "")
+    if not draft_text or not prompt:
+        return JsonResponse({"success": False, "message": "draft_text와 prompt가 필요합니다."}, status=400)
+    try:
+        edited = ai_edit(draft_text, prompt)
+        return JsonResponse({"success": True, "result": edited})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_evaluate —
+@csrf_exempt
+@require_POST
+def assist_evaluate(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    if not draft_text:
+        return JsonResponse({"success": False, "message": "draft_text가 필요합니다."}, status=400)
+    try:
+        evaluation = ai_evaluate(draft_text)
+        return JsonResponse({"success": True, "result": evaluation})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_generate_draft —
+@csrf_exempt
+@require_POST
+def assist_generate(request):
+    data = json.loads(request.body)
+    template_data = data.get("template_data")
+    if not template_data:
+        return JsonResponse({"success": False, "message": "template_data가 필요합니다."}, status=400)
+    try:
+        draft_md = ai_generate_draft(template_data)
+        return JsonResponse({"success": True, "result": draft_md})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
@@ -563,7 +606,7 @@ from collections import defaultdict
 from django.shortcuts import render
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_method, require_POST
 from .rag_client import rag_client
 
 logger = logging.getLogger(__name__)
@@ -871,7 +914,7 @@ def assist_ask(request):
     try:
         data = json.loads(request.body)
         prompt = data.get("prompt", "")
-        max_new_tokens = data.get("max_new_tokens", 32768)
+        max_new_tokens = data.get("max_new_tokens", 32768/2)
 
         # 실제 모델 호출
         answer = assist_client.generate_assist_answer(prompt, max_new_tokens)

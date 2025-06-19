@@ -36,4 +36,9 @@ urlpatterns = [
     # assist
     path('api/assist/ask/', views.assist_ask, name='assist_ask'),
     path('api/qwen/assist-stream/', views.assist_stream, name='assist_stream'),
+
+    path('api/assist/edit/',     views.assist_edit,     name='assist_edit'),
+    path('api/assist/evaluate/', views.assist_evaluate, name='assist_evaluate'),
+    path('api/assist/generate/', views.assist_generate, name='assist_generate'),
+
 ]

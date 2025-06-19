@@ -19,6 +19,7 @@
         <p>양식의 생성 시 구체적일수록 더 나은 특허 명세서 발명의 기재가 가능합니다.</p>
       </div>
       
+      
       <form id="templateForm" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
@@ -258,5 +259,6 @@
         <button type="button" name="submit_template" class="btn btn-secondary" style="display: none;">기존방식</button>
       </div>
     </form>
+    <div id="generatorOutput" style="display:none; white-space:pre-wrap;"></div>
   </div>
 </div>
