@@ -21,14 +21,15 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs" #os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True  # 운영환경용
 
 ALLOWED_HOSTS = ['13.209.57.183', "localhost", "127.0.0.1"]
 
@@ -45,10 +46,12 @@ INSTALLED_APPS = [
     'core',
     'accounts', 
     'user_admin',
+    'corsheaders',  # CORS 추가
     'assist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',      # CORS 미들웨어 추가 (맨 앞)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,6 +63,17 @@ MIDDLEWARE = [
 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# CORS 설정 - 운영환경용
+CORS_ALLOWED_ORIGINS = [
+    "http://13.209.57.183",  # EC2 서버 주소
+]
+
+# 기본 허용 헤더 + SSE에서 오는 text/event-stream 을 허용
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'text/event-stream',
 ]
 
 ROOT_URLCONF = 'pass_project.urls'
@@ -85,25 +99,14 @@ WSGI_APPLICATION = 'pass_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#RDS 추가 전
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'passdb',  # 데이터베이스 이름
-#         'USER': 'root',        # MySQL 사용자
-#         'PASSWORD': '1234', # MySQL 비밀번호
-#         'HOST': '127.0.0.1',   # 로컬 호스트
-#         'PORT': '3306',        # MySQL 포트
-#     }
-# }
-# RDS 추가 후
+# 운영(RDS)용 DB
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'passdb',  # RDS에서 생성한 DB 이름
-        'USER': 'admin',   # RDS 생성 시 설정한 사용자
-        'PASSWORD': '11111111',  # RDS 사용자 비밀번호 아닐시 Pass7276!
-        'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',  # RDS 엔드포인트
+        'NAME': 'passdb',
+        'USER': 'admin',
+        'PASSWORD': os.getenv('DB_PASSWORD', '11111111'),  # 환경변수 사용
+        'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
     }
 }
@@ -201,6 +204,10 @@ LOGGING = {
         },
     },
 }
+
+# FastAPI 서버 URL 설정
+FASTAPI_BASE_URL = os.getenv('FASTAPI_BASE_URL', "https://9kj9vbv0ckz1eu-7860.proxy.runpod.net")
+#FASTAPI_BASE_URL = os.getenv('FASTAPI_BASE_URL', "https://4gz2mlt3fj6myv-7860.proxy.runpod.net")
 
 # logs 디렉토리가 없으면 생성
 import os

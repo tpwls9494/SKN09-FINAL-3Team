@@ -1698,3 +1698,92 @@
 .draft_request_aibutton.dynamic-hover:hover img {
   content: url('/static/assist/images/logo-white.png');
 }
+/* 마크다운 렌더링 스타일 - 텍스트 넘침 방지 */
+.markdown-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow-y: auto;
+  line-height: 1.8;
+  font-size: 14px;
+  height: 500px;
+
+  /* 텍스트 넘침 방지 추가 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 패널 전체 너비 제한 */
+.panel {
+  background-color: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+
+  /* 너비 제한 추가 */
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.draft-panel {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* 패널 바디도 넘침 방지 */
+.panel-body {
+  padding: 25px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 평가 컨텐츠도 동일하게 */
+.evaluation-content {
+  flex: 1;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+
+  /* 텍스트 넘침 방지 추가 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 제목들도 넘침 방지 */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* 긴 단어나 URL이 있을 경우를 위한 추가 설정 */
+.markdown-content p,
+.markdown-content li,
+.markdown-content div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}

@@ -1,4 +1,3 @@
-# assist/rag_client.py
 import requests
 import json
 from django.conf import settings
@@ -8,22 +7,18 @@ import time
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-logger = logging.getLogger(__name__)
-
-class RAGClient:
+class AssistClient:
     def __init__(self):
-        # RunPod 서버 URL - HTTPS 강제 사용
-        base_url = getattr(
-            settings,
-            'RAG_SERVER_URL',
-            'https://9kj9vbv0ckz1eu-7860.proxy.runpod.net'
-        )
-        # HTTP를 HTTPS로 강제 변환
+        # 1) settings에서 가져온 URL을 로컬 변수에 저장
+        base_url = settings.FASTAPI_BASE_URL.rstrip('/')
+
+        # 2) HTTP 스킴이 있으면 HTTPS로 강제 변환
         if base_url.startswith('http://'):
             base_url = base_url.replace('http://', 'https://')
-        
+
+        # 3) 인스턴스 속성에 최종 URL 할당
         self.base_url = base_url
-        self.timeout = 120
+        self.timeout = 60 * 10 # 긴 응답을 위해 5분
         self.health_timeout = 10
         
         # 세션 설정 - 재시도 로직
@@ -58,69 +53,7 @@ class RAGClient:
             logger.error(f"RAG 서버 헬스체크 실패: {str(e)}")
             return {"status": "error", "message": str(e)}
 
-    def generate_answer(
-        self,
-        query: str,
-        max_new_tokens: int = 512,
-        top_k: int = 5,
-        temperature: float = 0.7
-    ) -> Dict:
-        """RAG를 사용한 답변 생성"""
-        try:
-            payload = {
-                "query": query,
-                "max_new_tokens": max_new_tokens,
-                "top_k": top_k,
-                "temperature": temperature
-            }
-            logger.info(f"RAG 요청 시작: {query[:100]}...")
-            start_time = time.time()
-            
-            response = self.session.post(
-                f"{self.base_url}/api/rag/generate",
-                json=payload,
-                timeout=self.timeout,
-                verify=False
-            )
-            response.raise_for_status()
-            result = response.json()
-            
-            elapsed_time = time.time() - start_time
-            logger.info(f"RAG 응답 완료 (소요시간: {elapsed_time:.2f}초)")
-            return result
-            
-        except requests.exceptions.Timeout:
-            logger.error("RAG 요청 타임아웃")
-            return {
-                "status": "error",
-                "message": "요청 처리 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.",
-                "answer": "죄송합니다. 요청 처리 시간이 초과되었습니다.",
-                "relevant_documents": [],
-                "context_used": 0,
-                "query": query
-            }
-        except requests.exceptions.RequestException as e:
-            logger.error(f"RAG 생성 요청 실패: {str(e)}")
-            return {
-                "status": "error",
-                "message": f"AI 서비스 연결 실패: {str(e)}",
-                "answer": "죄송합니다. 현재 AI 서비스에 일시적인 문제가 발생했습니다.",
-                "relevant_documents": [],
-                "context_used": 0,
-                "query": query
-            }
-        except Exception as e:
-            logger.error(f"예상치 못한 오류: {str(e)}")
-            return {
-                "status": "error",
-                "message": f"예상치 못한 오류: {str(e)}",
-                "answer": "죄송합니다. 시스템 오류가 발생했습니다.",
-                "relevant_documents": [],
-                "context_used": 0,
-                "query": query
-            }
-
-    def generate_qa_answer(self, query: str, max_new_tokens: int = 512) -> str:
+    def generate_assist_answer(self, query: str, max_new_tokens: int = 32768) -> str:
         """Qwen3-8B를 사용한 QA 답변 생성"""
         try:
             payload = {
@@ -129,7 +62,7 @@ class RAGClient:
             }
 
             response = self.session.post(
-                f"{self.base_url}/api/qwen/qa",
+                f"{self.base_url}/api/qwen/assist",
                 json=payload,
                 timeout=self.timeout,
                 verify=False,
@@ -164,4 +97,4 @@ class RAGClient:
             )
 
 # 싱글톤 인스턴스
-rag_client = RAGClient()
+assist_client = AssistClient()
