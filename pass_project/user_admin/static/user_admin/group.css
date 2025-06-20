@@ -453,11 +453,6 @@ h1 {
   cursor: pointer;
 }
 
-
-/* .status.red { background: #dc3545; }
-.status.gray { background: gray; }
-.status.blue { background: #007bff; } */
-
 .status.pink { background: #FFC0CB80; }
 .status.gray { background: #727272; }
 .status.white { background: #ffffff; }

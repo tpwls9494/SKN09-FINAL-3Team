@@ -233,7 +233,7 @@ App.history = {
     toggleBtn.textContent = isCollapsed ? '▲' : '▼';
     
     // 데이터 업데이트
-    const team = this.data.teamHistory.find(t => t.id === teamId);
+    const team = this.teamHistoryData.find(t => t.id === teamId);
     if (team) {
       team.expanded = isCollapsed;
     }
@@ -466,27 +466,33 @@ App.history = {
   
   // 히스토리에 추가
   addToHistory(techName) {
-    const newId = Math.max(...this.data.myHistory.map(h => h.id), 0) + 1;
-    const now = new Date();
-    const timestamp = now.toLocaleString();
-    
-    const newHistoryItem = {
-      id: newId,
-      title: techName || '새로운 특허 명세서',
-      items: [
-        { 
-          id: newId * 10 + 1, 
-          title: `생성된 특허 명세서 초안 - ${timestamp}`, 
-          content: App.data.currentDraftContent 
-        }
-      ],
-      expanded: true
-    };
-    
-    this.data.myHistory.unshift(newHistoryItem);
-    this.renderMyHistory();
-    
-    App.utils.showNotification('히스토리에 저장되었습니다.');
+    const content = App.data.currentDraftContent; // 저장할 특허 명세서 초안 내용
+
+    return fetch('/assist/insert_patent_report/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': App.draft.getCSRFToken(),
+      },
+      body: JSON.stringify({
+        user_id: currentUser.id,
+        tech_name: techName || '새로운 특허 명세서',
+        create_draft: content,
+	sc_flag: 'create',
+	version: 'v1'
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+	window.CURRENT_TEMPLATE_ID = data.template_id;
+        this.renderMyHistory(); // 서버 최신 데이터로 패널 갱신
+        App.utils.showNotification('히스토리에 저장되었습니다.');
+	return data.template_id;
+      } else {
+        App.utils.showNotification('저장 실패');
+      }
+    });
   }
 };
 
@@ -495,4 +501,4 @@ document.addEventListener('DOMContentLoaded', function() {
   if (App.history) {
     App.history.init();
   }
-});
+})

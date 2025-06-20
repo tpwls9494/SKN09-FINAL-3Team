@@ -20,6 +20,7 @@
         <div id='inputWithButton'>
           <input type="text" id="input-requestai" placeholder="pass에게 바꾸고자 하는 내용을 알려주세요."/>
           <button type="button" id="sent-ai-request">전송</button>
+          <div id="aiRequestResult" style="display:none; white-space:pre-wrap;"></div>
         </div>
       </div>
         
@@ -34,6 +35,7 @@
             <button type="button" class="draft_request_aibutton" onclick="App.draft.requestAI()"><img src="{% static 'assist/images/logo.png' %}" alt="로고" class="request-logo"/> AI 요청</button>
           </div>
           <button type="button" class="draft_evalbutton" onclick="App.evaluation.start()"><i class="fa-solid fa-file-circle-check"></i> AI 평가</button>
+          <div id="evaluationResult" style="display:none; white-space:pre-wrap;"></div>
           <button type="button" class="draft_downloadbutton" onclick="App.download.openModal()"><i class="fa-solid fa-download"></i> 다운로드</button>
         </div>
       </div>

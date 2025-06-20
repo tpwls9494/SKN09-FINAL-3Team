@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.models.functions import Substr, Cast
 from django.db.models import IntegerField, OuterRef, Subquery
 from django.utils import timezone
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.conf import settings
 from .forms import TemplateForm
 from core.models import Template, Draft, User, Evaluation, Team, TeamLog
@@ -12,10 +13,76 @@ from django.template.loader import get_template
 from weasyprint import HTML, CSS
 from docx import Document
 from bs4 import BeautifulSoup, NavigableString
+from collections import defaultdict
 from io import BytesIO
+import requests
 import os
 import json
-from collections import defaultdict
+from .rag_client import rag_client
+from .assist_client import assist_client
+import logging
+
+
+def ai_edit(draft_text, prompt):
+    # prompt + draft_text 를 합친 뒤 Assist 모델로 보내는 예시
+    full_prompt = f"{prompt}\n\n{draft_text}"
+    return assist_client.generate_assist_answer(full_prompt)
+
+def ai_evaluate(draft_text):
+    # 평가를 위한 프롬프트 템플릿
+    eval_prompt = f"이 초안을 평가해줘:\n\n{draft_text}"
+    return assist_client.generate_assist_answer(eval_prompt)
+
+def ai_generate_draft(template_data):
+    # 지금 쓰던 mock_ai_generate_draft 대신
+    # template_data 를 JSON 직렬화해서 Assist 모델에 넘길 수도 있고
+    # 또는 미리 만든 마크다운 뼈대(prompt)를 넘기면 됩니다.
+    prompt = f"다음 템플릿을 보고 초안을 작성해줘:\n\n{json.dumps(template_data)}"
+    return assist_client.generate_assist_answer(prompt, max_new_tokens=4096)
+
+# — ai_edit —
+@csrf_exempt
+@require_POST
+def assist_edit(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    prompt     = data.get("prompt", "")
+    if not draft_text or not prompt:
+        return JsonResponse({"success": False, "message": "draft_text와 prompt가 필요합니다."}, status=400)
+    try:
+        edited = ai_edit(draft_text, prompt)
+        return JsonResponse({"success": True, "result": edited})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_evaluate —
+@csrf_exempt
+@require_POST
+def assist_evaluate(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    if not draft_text:
+        return JsonResponse({"success": False, "message": "draft_text가 필요합니다."}, status=400)
+    try:
+        evaluation = ai_evaluate(draft_text)
+        return JsonResponse({"success": True, "result": evaluation})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_generate_draft —
+@csrf_exempt
+@require_POST
+def assist_generate(request):
+    data = json.loads(request.body)
+    template_data = data.get("template_data")
+    if not template_data:
+        return JsonResponse({"success": False, "message": "template_data가 필요합니다."}, status=400)
+    try:
+        draft_md = ai_generate_draft(template_data)
+        return JsonResponse({"success": True, "result": draft_md})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
@@ -104,141 +171,23 @@ def mock_ai_generate_draft(template_data):
 
 def editor_view(request):
     return render(request, 'assist/editor.html')
-    # if request.method == 'POST':
-    #     # 템플릿 → 초안 생성 (AJAX 요청 처리)
-    #     if request.headers.get('Content-Type') == 'application/json':
-    #         try:
-    #             data = json.loads(request.body)
-                
-    #             # Template 저장
-    #             template = Template(
-    #                 user_code=request.user if request.user.is_authenticated else None,
-    #                 tech_name=data.get('tech_name', ''),
-    #                 tech_description=data.get('tech_description', ''),
-    #                 problem_solved=data.get('problem_solved', ''),
-    #                 tech_differentiation=data.get('tech_differentiation', ''),
-    #                 application_field=data.get('application_field', ''),
-    #                 components_functions=data.get('components_functions', ''),
-    #                 implementation_example=data.get('implementation_example', ''),
-    #                 drawing_description=data.get('drawing_description', ''),
-    #                 application_info=data.get('applicant_name', '') + ', ' + 
-    #                                data.get('applicant_nationality', '') + ', ' + 
-    #                                data.get('applicant_address', ''),
-    #                 inventor_info=data.get('inventor_name', '') + ', ' + 
-    #                             data.get('inventor_nationality', '') + ', ' + 
-    #                             data.get('inventor_address', ''),
-    #                 template_title=data.get('tech_name', '')[:50],
-    #                 date=timezone.now()
-    #             )
-    #             template.save()
-
-    #             # AI로 초안 생성
-    #             draft_content = mock_ai_generate_draft(data)
-                
-    #             # Draft 저장
-    #             draft = Draft.objects.create(
-    #                 template_id=template,
-    #                 draft_name=f"{template.tech_name}_draft",
-    #                 create_draft=draft_content,
-    #                 create_time=timezone.now()
-    #             )
-                
-    #             return JsonResponse({
-    #                 'success': True,
-    #                 'draft_content': draft_content,
-    #                 'draft_id': draft.draft_id,
-    #                 'message': '특허 초안이 성공적으로 생성되었습니다.'
-    #             })
-                
-    #         except Exception as e:
-    #             return JsonResponse({
-    #                 'success': False,
-    #                 'error': str(e),
-    #                 'message': '초안 생성 중 오류가 발생했습니다.'
-    #             })
-        
-    #     # 기존 폼 처리 (하위 호환성)
-    #     elif 'submit_template' in request.POST:
-    #         form = TemplateForm(request.POST)
-    #         if form.is_valid():
-    #             template = form.save(commit=False)
-    #             if request.user.is_authenticated:
-    #                 template.user_code = request.user
-    #             template.date = timezone.now()
-    #             template.save()
-
-    #             # 기존 로직으로 초안 생성
-    #             template_data = {
-    #                 'tech_name': template.tech_name,
-    #                 'tech_description': template.tech_description,
-    #                 'problem_solved': template.problem_solved,
-    #                 'tech_differentiation': template.tech_differentiation,
-    #                 'application_field': template.application_field,
-    #                 'components_functions': template.components_functions,
-    #                 'implementation_example': template.implementation_example,
-    #                 'drawing_description': template.drawing_description,
-    #                 'application_info': template.application_info,
-    #                 'inventor_info': template.inventor_info,
-    #             }
-                
-    #             draft_content = mock_ai_generate_draft(template_data)
-                
-    #             draft = Draft.objects.create(
-    #                 template_id=template,
-    #                 draft_name=f"{template.tech_name}_draft",
-    #                 create_draft=draft_content,
-    #                 create_time=timezone.now()
-    #             )
-    #             return redirect('assist:editor')
-
-    #     # 직접 수정 저장
-    #     elif 'save_draft' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         new_text = request.POST.get('draft_text')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         draft.create_draft = new_text
-    #         draft.save()
-
-    #     # AI 수정
-    #     elif 'ai_edit' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         prompt = request.POST.get('prompt')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         draft.create_draft = mock_ai_edit(draft.create_draft, prompt)
-    #         draft.save()
-
-    #     # AI 평가
-    #     elif 'ai_evaluate' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         request.session['ai_feedback'] = mock_ai_evaluate(draft.create_draft)
-    #         request.session['active_draft'] = draft.draft_id
-
-    #     return redirect('assist:editor')
-
-    # # GET 요청 처리
-    # template = Template.objects.last()
-    # draft = Draft.objects.last()
-    # feedback = request.session.pop('ai_feedback', None) if draft else None
-    
-    # return render(request, 'assist/editor.html', {
-    #     'form': TemplateForm(),
-    #     'template': template,
-    #     'draft': draft,
-    #     'feedback': feedback
-    # })
 
 @csrf_exempt
 def insert_patent_report(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        # user 테이블 연동
-        users = User.objects.all()
 
         if data['sc_flag'] == 'create':
+            # user 테이블 연동
+            user = User.objects.get(username=data.get("user_id"))
+            user_code = user.__dict__['user_code']
+            print("code", user_code)
             try:
                 with transaction.atomic():
+                    user_id = data.get("user_id")
+                    user = User.objects.get(username=user_id)
                     template = Template.objects.create(
+                        user_code = user,
                         tech_name=data.get("tech_name"),
                         tech_description=data.get("tech_description"),
                         problem_solved=data.get("problem_solved"),
@@ -250,7 +199,8 @@ def insert_patent_report(request):
                         application_info=data.get("application_info", "applicant_info"),
                         inventor_info=data.get("inventor_info", "inventors"),
                         date=timezone.now(),
-                        template_title=data.get("tech_name")
+                        template_title=data.get("tech_name"),
+                        user_code_id=user_code
                     )
 
                     draft = Draft.objects.create(
@@ -583,25 +533,6 @@ def download_pdf(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.pdf"'
     return response
 
-# from xhtml2pdf import pisa
-# from xhtml2pdf.default import DEFAULT_FONT
-# from reportlab.pdfbase import pdfmetrics
-# from reportlab.pdfbase.ttfonts import TTFont
-# from reportlab.lib.fonts import addMapping
-# def download_pdf(request, draft_id):
-#     draft = get_object_or_404(Draft, draft_id=draft_id)
-#     template = get_template('assist\includes\draft_pdf_template.html')  # 경로 수정
-#     html_content = markdown.markdown(draft.__dict__['create_draft'])
-
-#     font_path = os.path.join(settings.BASE_DIR, 'assist', 'static', 'assist', 'fonts', 'malgun.ttf')
-#     font_url = f'file://{font_path.replace(os.sep, "/")}'
-#     html = template.render({'draft': draft, 'create_draft_html': html_content, 'font_path': font_url})
-
-#     response = HttpResponse(content_type='application/pdf')
-#     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__['draft_title']}.pdf"'
-#     pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=response, encoding='utf-8')
-#     return response
-
 def add_paragraph_with_breaks(doc, text):
     if text.strip():
         doc.add_paragraph(text.strip())
@@ -656,27 +587,393 @@ def download_docx(request, draft_id):
     response['Content-Disposition'] = f'attachment; filename="{draft.draft_title}.docx"'
     return response
 
-# def download_docx(request, draft_id):
-#     draft = get_object_or_404(Draft, draft_id=draft_id)
-#     document = Document()
-#     document.add_heading(draft.draft_name, level=1)
-#     document.add_paragraph(draft.create_draft)
-
-#     response = HttpResponse(
-#         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-#     )
-#     response['Content-Disposition'] = f'attachment; filename="{draft.draft_name}.docx"'
-#     document.save(response)
-#     return response
-
 def download_hwp(request, draft_id):
     """HWP 다운로드 (현재는 텍스트 파일로 대체)"""
     draft = get_object_or_404(Draft, draft_id=draft_id)
     
     # HWP 라이브러리가 없으므로 텍스트 파일로 대체
-    content = f"{draft.__dict__["draft_name"]}\n\n{draft.__dict__["create_draft"]}"
+    content = f"{draft.__dict__['draft_name']}\n\n{draft.__dict__['create_draft']}"
     
     response = HttpResponse(content, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{draft.__dict__["draft_title"]}.txt"'
     return response
+   
+# views.py의 QA 관련 부분 (최종 버전)
+
+import logging
+import json
+from collections import defaultdict
+from django.shortcuts import render
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_method, require_POST
+from .rag_client import rag_client
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------
+#  QA 관련 함수들
+# ---------------------------------------------------------------------
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def qa_page(request):
+    """Q&A 페이지 렌더링"""
+    return render(request, "assist/qa.html")
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def qa_ask(request):
+    """Qwen3-8B 모델을 사용한 질문 답변 API"""
+    try:
+        # JSON 요청 확인
+        if not request.headers.get("Content-Type", "").startswith("application/json"):
+            return JsonResponse(
+                {"success": False, "message": "application/json Content-Type이 필요합니다."},
+                status=415
+            )
+
+        # 요청 데이터 파싱
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "message": "잘못된 JSON 형식입니다."},
+                status=400
+            )
+
+        question = payload.get("question", "").strip()
+        max_new_tokens = payload.get("max_new_tokens", 512)
+
+        if not question:
+            return JsonResponse(
+                {"success": False, "message": "질문을 입력해 주세요."},
+                status=400,
+            )
+
+        # rag_client를 통해 QA 요청
+        answer_html = rag_client.generate_qa_answer(question, max_new_tokens)
+
+        return JsonResponse(
+            {
+                "success": True,
+                "answer": answer_html,
+                "question": question,
+                "message": "답변이 생성되었습니다.",
+            }
+        )
+
+    except Exception as exc:
+        logger.error("qa_ask 예외: %s", exc)
+        return JsonResponse(
+            {"success": False, "message": f"서버 오류: {str(exc)}"},
+            status=500
+        )
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def qa_test_connection(request):
+    """QA 서버 연결 테스트"""
+    try:
+        # 기존 health_check 재사용
+        health_result = rag_client.health_check()
+
+        if health_result.get("status") == "error":
+            return JsonResponse({
+                "status": "error",
+                "message": f"QA 서버 연결 실패: {health_result.get('message')}",
+                "server_url": rag_client.base_url
+            }, status=500)
+
+        # 간단한 QA 테스트
+        test_answer = rag_client.generate_qa_answer("연결 테스트", 50)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "QA 서버 연결 성공",
+            "server_url": rag_client.base_url,
+            "health_check": health_result,
+            "test_answer": test_answer[:100] + "..." if len(test_answer) > 100 else test_answer
+        })
+
+    except Exception as e:
+        logger.error(f"QA 서버 연결 테스트 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": f"QA 서버 연결 실패: {str(e)}",
+            "server_url": rag_client.base_url
+        }, status=500)
+
+# ---------------------------------------------------------------------
+#  기존 RAG 관련 함수들 (변경 없음)
+# ---------------------------------------------------------------------
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def test_rag_connection(request):
+    """RAG 서버 연결 테스트"""
+    try:
+        health = rag_client.health_check()
+        return JsonResponse({
+            "status": "success",
+            "health_check": health,
+            "server_url": rag_client.base_url
+        })
+    except Exception as e:
+        logger.error(f"RAG 연결 테스트 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def ask_question(request):
+    """질문하기 API (RAG)"""
+    if request.method == "GET":
+        return JsonResponse({"message": "POST 요청을 사용하세요"})
+
+    try:
+        data = json.loads(request.body)
+        query = data.get('query', '').strip()
+
+        if not query:
+            return JsonResponse({
+                "status": "error",
+                "message": "질문을 입력해주세요."
+            }, status=400)
+
+        # RAG 서버에 질문 요청
+        result = rag_client.generate_answer(
+            query=query,
+            max_new_tokens=data.get('max_new_tokens', 512),
+            top_k=data.get('top_k', 5),
+            temperature=data.get('temperature', 0.7)
+        )
+
+        return JsonResponse(result)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "status": "error",
+            "message": "잘못된 JSON 형식입니다."
+        }, status=400)
+    except Exception as e:
+        logger.error(f"질문 처리 실패: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def ask_question_stream(request):
+    """스트리밍 질문하기 API (GET 방식)"""
+    try:
+        # GET 파라미터에서 데이터 추출
+        query = request.GET.get('query', '').strip()
+        max_new_tokens = int(request.GET.get('max_new_tokens', 512))
+        top_k = int(request.GET.get('top_k', 5))
+        temperature = float(request.GET.get('temperature', 0.7))
+
+        if not query:
+            def error_generator():
+                yield f"data: {json.dumps({'type': 'error', 'message': '질문을 입력해주세요'})}\n\n"
+
+            response = StreamingHttpResponse(
+                error_generator(),
+                content_type='text/event-stream; charset=utf-8'
+            )
+            response['Cache-Control'] = 'no-cache'
+            response['Connection'] = 'keep-alive'
+            response['X-Accel-Buffering'] = 'no'
+            return response
+
+        # RunPod RAG 서버에 GET 방식으로 스트리밍 요청
+        def stream_from_rag():
+            try:
+                # FastAPI GET 엔드포인트 호출 (URL 파라미터 사용)
+                params = {
+                    'query': query,
+                    'max_new_tokens': max_new_tokens,
+                    'top_k': top_k,
+                    'temperature': temperature
+                }
+
+                response = requests.get(
+                    f'{rag_client.base_url}/api/rag/generate-stream',
+                    params=params,
+                    stream=True,
+                    timeout=300  # 5분 타임아웃
+                )
+
+                response.raise_for_status()
+
+                # 스트림 데이터를 실시간으로 전달
+                for line in response.iter_lines(decode_unicode=True):
+                    if line:
+                        if line.startswith('data: '):
+                            yield f"{line}\n\n"
+                        else:
+                            yield f"data: {line}\n\n"
+
+                        # 즉시 전송을 위한 플러시
+                        import sys
+                        sys.stdout.flush()
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"RAG 서버 스트리밍 요청 실패: {str(e)}")
+                error_data = json.dumps({
+                    'type': 'error',
+                    'message': f'RAG 서버 연결 실패: {str(e)}'
+                })
+                yield f"data: {error_data}\n\n"
+            except Exception as e:
+                logger.error(f"스트리밍 처리 중 오류: {str(e)}")
+                error_data = json.dumps({
+                    'type': 'error',
+                    'message': f'처리 중 오류: {str(e)}'
+                })
+                yield f"data: {error_data}\n\n"
+
+        response = StreamingHttpResponse(
+            stream_from_rag(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+
+        # 실시간 스트리밍을 위한 헤더 설정
+        response['Cache-Control'] = 'no-cache'
+        response['Connection'] = 'keep-alive'
+        response['X-Accel-Buffering'] = 'no'  # nginx 버퍼링 방지
+
+        return response
+
+    except ValueError as e:
+        logger.error(f"파라미터 오류: {str(e)}")
+        def error_generator():
+            yield f"data: {json.dumps({'type': 'error', 'message': f'파라미터 오류: {str(e)}'})}\n\n"
+
+        response = StreamingHttpResponse(
+            error_generator(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+        response['Cache-Control'] = 'no-cache'
+        return response
+    except Exception as e:
+        logger.error(f"스트리밍 질문 처리 실패: {str(e)}")
+        def error_generator():
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+        response = StreamingHttpResponse(
+            error_generator(),
+            content_type='text/event-stream; charset=utf-8'
+        )
+        response['Cache-Control'] = 'no-cache'
+        return response
+
+def rag_demo(request):
+    """RAG 시스템 데모 페이지"""
+    return render(request, 'assist/rag_demo.html')
+
+def rag_demo_stream(request):
+    """RAG 시스템 데모 페이지(스트리밍)"""
+    return render(request, 'assist/rag_demo_stream.html')
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def rag_status(request):
+    """RAG 시스템 상태 확인"""
+    try:
+        health = rag_client.health_check()
+        return JsonResponse({
+            "status": "success",
+            "rag_server": health,
+            "server_url": rag_client.base_url
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+#===========================================
+
+# assist
+
+import logging
+import time
+from django.http import JsonResponse
+from .assist_client import assist_client
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def assist_ask(request):
+    logger.debug("▶ assist_ask called, method=%s, body=%s", request.method, request.body)
+    start = time.time()
+    try:
+        data = json.loads(request.body)
+        prompt = data.get("prompt", "")
+        max_new_tokens = data.get("max_new_tokens", 32768/2)
+
+        # 실제 모델 호출
+        answer = assist_client.generate_assist_answer(prompt, max_new_tokens)
+        elapsed = time.time() - start
+
+        logger.debug("◀ assist_ask returning (%.2fs): %s", elapsed, answer[:200])
+
+        return JsonResponse({
+            "success": True,
+            "answer": answer,
+            "prompt": prompt,
+            "time": elapsed,
+        })
+    except Exception as e:
+        elapsed = time.time() - start
+        logger.exception("❌ assist_ask exception after %.2fs", elapsed)
+        return JsonResponse({
+            "success": False,
+            "error": str(e),
+            "time": elapsed,
+        }, status=500)
     
+def assist_stream(request):
+    query = request.GET.get("query", "").strip()
+    max_new = request.GET.get("max_new_tokens", "512")
+
+    if not query:
+        return StreamingHttpResponse(
+            "data: {\"type\":\"error\",\"message\":\"query가 필요합니다.\"}\n\n",
+            content_type="text/event-stream; charset=utf-8",
+        )
+
+    # RunPod FastAPI SSE URL
+    upstream_url = f"{settings.FASTAPI_BASE_URL}/api/qwen/assist-stream"
+    params = {
+        "query": query,
+        "max_new_tokens": max_new
+    }
+
+    def event_generator():
+        try:
+            resp = requests.get(upstream_url, params=params, stream=True, timeout=300)
+            resp.raise_for_status()
+            for raw in resp.iter_lines(decode_unicode=True):
+                if not raw:
+                    continue
+                # FastAPI 쪽에서 이미 "data: {...}" 형태로 내려온다고 가정
+                # 그대로 내려보내기만 하면 됩니다.
+                yield raw + "\n\n"
+        except Exception as e:
+            err = json.dumps({"type": "error", "message": str(e)})
+            yield f"data: {err}\n\n"
+
+    response = StreamingHttpResponse(
+        event_generator(),
+        content_type="text/event-stream; charset=utf-8",
+    )
+    # 버퍼링 방지, hop-by-hop 헤더 덮어쓰기
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    response["Connection"] = "keep-alive"
+    return response

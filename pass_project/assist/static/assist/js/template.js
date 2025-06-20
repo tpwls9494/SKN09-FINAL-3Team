@@ -1,3 +1,333 @@
+const ASSIST_STREAM_URL = '/assist/api/qwen/assist-stream/';
+const fastApiUrl = 'https://4gz2mlt3fj6myv-7860.proxy.runpod.net/api/qwen/assist-stream';
+
+// === 1. 프롬프트 템플릿 & 설정 ===
+
+const unifiedInferencePrompt = `
+Below is a fixed instruction that guides the assistant to work as a Korean patent AI assistant.
+The assistant must identify the task type and respond accordingly in Korean.
+Think step-by-step before responding.
+The final response should be written in Korean and MUST follow the EXACT format specified below.
+**Respond in Korean.**
+
+### Task Type: {task_type}
+
+### Instruction:
+{instruction}
+
+### Context:
+{context}
+
+### Input:
+{input}
+
+### REQUIRED OUTPUT FORMAT (FOLLOW EXACTLY):
+{output_format}
+
+### Example Output Format:
+{few_shot_example}
+
+### Output:
+`;
+
+const INFERENCE_INSTRUCTIONS = {
+  PATENT_FORM: `당신은 대한민국 특허법에 따라 명세서를 작성하는 특허 어시스턴트입니다. 아래의 구성요소별로 정확하고 구조화된 문서를 생성해야 합니다. 
+모든 항목은 특허법 제42조 및 시행규칙 제21조, 개정된 모범 명세서 작성법(2007.07.01. 이후 적용)을 철저히 준수해야 합니다…
+
+주의: 한국어로만 구사해주세요. 중국어(한자)는 사용하지 마세요.`,
+  PATENT_EVALUATION: `제출된 특허 문서 또는 아이디어를 평가하고 개선 방향을 제안하세요. 
+다음 기준에 따라 분석하고 점수와 구체적인 개선사항을 제시하세요:
+1. [신규성] - 동일한 발명이 이미 공개된 경우…
+2. [진보성] - 통상의 기술자에게 자명한 경우…
+…
+주의: 한국어로만 구사해주세요. 중국어(한자)는 사용하지 마세요.`,
+  PATENT_RECOMMENDATION: `평가에서 제시된 개선 사항을 반영하여 명세서 내용을 보완하세요.
+…
+주의: 한국어로만 구사해주세요. 중국어(한자)는 사용하지 마세요.`,
+  PATENT_MODIFICATION: `당신은 특허 명세서 작성 전문가입니다. 
+사용자의 요청에 따라 문서를 전문적으로 수정하세요.
+…
+주의: 한국어로만 구사해주세요. 중국어(한자)는 사용하지 마세요.`
+};
+
+const OUTPUT_FORMATS = {
+  PATENT_FORM: `
+[발명의 명칭]
+(발명명) {{영문명}}
+
+[요약]
+(발명 요약)
+
+[특허청구범위]
+청구항 1: (독립항)
+청구항 2: (종속항)
+
+[기술분야]
+(기술분야 설명)
+
+[배경기술]
+(종래 기술 설명)
+
+[해결하려는 과제]
+(문제점 및 과제)
+
+[과제의 해결 수단]
+(해결 방법)
+
+[발명의 효과]
+(기술적 효과)
+
+[발명을 실시하기 위한 구체적인 내용]
+(구체적 실시 내용)
+
+[도면의 간단한 설명]
+(도면 설명)
+`,
+  PATENT_EVALUATION: `
+[신규성 평가]
+점수: /10점
+평가 의견:
+
+[진보성 평가]
+점수: /10점
+평가 의견:
+
+[산업적 이용 가능성 평가]
+점수: /10점
+평가 의견:
+
+[기재불비 평가]
+점수: /10점
+평가 의견:
+
+[종합 평가]
+총점: /10점
+개선 방향:
+`,
+  PATENT_RECOMMENDATION: `평가에서 제시된 개선 사항을 반영하여 명세서 내용을 보완하세요.
+
+- (구조·항목 유지, 표현 자유)
+- 최종 결과물은 아래 형식으로:
+  [수정된 항목]
+  <<수정 전>>
+  …
+  <<수정 후>>
+  …`,
+  PATENT_MODIFICATION: `수정된 내용을 명확히 제시하세요.`
+};
+
+const FEW_SHOT_EXAMPLES = {
+  PATENT_FORM: `
+[발명의 명칭]
+AI 기반 스마트 농업 시스템 {{AI-based Smart Agriculture System}}
+
+[기술분야]
+본 발명은 인공지능 기술을 활용한 스마트 농업 시스템에 관한 것이다.
+
+[배경기술]
+종래의 농업 방식은 농작물 관리에 있어 많은 시간과 노동력이 소요되었다...
+`,
+  PATENT_EVALUATION: `
+[신규성 평가]
+점수: 7/10점
+평가 의견: 기존 기술과 차별성이 있으나...
+
+[진보성 평가]
+점수: 6/10점
+평가 의견: 통상의 기술자에게 자명한 수준...
+`,
+  PATENT_MODIFICATION: `
+[수정된 배경기술]
+기존의 중앙집중식 신원 인증 시스템은 사용자 정보가 한곳에 집중되어 있어...
+
+[수정 이유]
+구체적인 사례와 기술적 분석을 추가하여 설득력을 높였습니다.
+`
+};
+
+function buildPrompt(taskType, context, input) {
+  return unifiedInferencePrompt
+    .replace('{task_type}',       taskType)
+    .replace('{instruction}',     INFERENCE_INSTRUCTIONS[taskType])
+    .replace('{context}',         context || '')
+    .replace('{input}',           input || '')
+    .replace('{output_format}',   OUTPUT_FORMATS[taskType])
+    .replace('{few_shot_example}', FEW_SHOT_EXAMPLES[taskType] || '')
+    .replace('{output}',          '');
+}
+
+function openAssistStream(queryStr, onToken, onDone, onError) {
+  const url = `${ASSIST_STREAM_URL}?query=${queryStr}&max_new_tokens=32768`;
+  const es  = new EventSource(url);
+
+  es.onmessage = e => {
+    const data = JSON.parse(e.data);
+    if      (data.type === 'token') onToken(data.content);
+    else if (data.type === 'done')  { onDone(); es.close(); }
+    else if (data.type === 'error') { onError(data.message); es.close(); }
+  };
+  es.onerror = err => { onError(err); es.close(); };
+  return es;
+}
+
+/**
+ * formData 객체 + extraPrompt(문구) → query 파라미터용 URL-encoded JSON
+ */
+function makeQuery(formData, extraPrompt) {
+  const payload = { ...formData, prompt: extraPrompt };
+  return encodeURIComponent(JSON.stringify(payload));
+}
+
+document.querySelector('.convert-btn').addEventListener('click', e => {
+  e.preventDefault();
+  const formData = collectFormData();            // your existing form 수집 함수
+  const extra    = `템플릿 데이터를 기반으로 마크다운 형식으로 변환해줘.`;
+  const queryStr = makeQuery(formData, extra);
+
+  const out = document.getElementById('generatorOutput');
+  out.innerText = '';
+  out.style.display = 'block';
+
+  openAssistStream(
+    queryStr,
+    token => out.innerText += token,
+    ()     => console.log('변환 완료'),
+    err    => alert('변환 오류: ' + err)
+  );
+});
+
+document.querySelector('.draft_evalbutton').addEventListener('click', () => {
+  const draft   = document.getElementById('draftContent').innerText;
+  const extra   = `이 초안을 평가해줘.`;
+  const queryStr= encodeURIComponent(JSON.stringify({ draft_text: draft, prompt: extra }));
+
+  const out = document.getElementById('evaluationResult');
+  out.innerText = '';
+  out.style.display = 'block';
+
+  openAssistStream(
+    queryStr,
+    token => out.innerText += token,
+    ()     => console.log('평가 완료'),
+    err    => alert('평가 오류: ' + err)
+  );
+});
+
+// — AI 요청 (전송)
+document.getElementById('sent-ai-request').addEventListener('click', () => {
+  const formData = collectFormData();
+  const extra    = `이 템플릿 기반으로 특허 명세서 초안을 작성해줘.`;
+  const queryStr = makeQuery(formData, extra);
+
+  const out = document.getElementById('aiRequestResult');
+  out.innerText = '';
+  out.style.display = 'block';
+
+  openAssistStream(
+    queryStr,
+    token => out.innerText += token,
+    ()     => console.log('AI 요청 완료'),
+    err    => alert('AI 요청 오류: ' + err)
+  );
+});
+
+// — 수정 적용
+document.getElementById('applyModificationBtn').addEventListener('click', () => {
+  const userReq = document.getElementById('modificationRequest').value;
+  const draft   = document.getElementById('draftContent').innerText;
+  const input   = `${userReq}\n\n${draft}`;
+  const prompt  = buildPrompt('PATENT_MODIFICATION', '', input);
+
+  const out = document.getElementById('modificationResult');
+  out.innerText = '';
+  out.style.display = 'block';
+
+  openAssistStream(
+    encodeURIComponent(JSON.stringify({ draft_text: draft, prompt: userReq })),
+    token => out.innerText += token,
+    ()     => console.log('수정 완료'),
+    err    => alert('수정 오류: ' + err)
+  );
+});
+
+document.querySelector('.draft-modifybutton').addEventListener('click', () => {
+  const draft   = document.getElementById('draftContent').innerText;
+  const extra   = `이 초안과 평가를 기반으로 개선된 특허 명세서를 추천해줘.`;
+  const queryStr= encodeURIComponent(JSON.stringify({ draft_text: draft, prompt: extra }));
+
+  const out = document.getElementById('recommendationResult');
+  out.innerText = '';
+  out.style.display = 'block';
+
+  openAssistStream(
+    queryStr,
+    token => out.innerText += token,
+    ()     => console.log('추천 완료'),
+    err    => alert('추천 오류: ' + err)
+  );
+});
+// EX) 변환 버튼
+document.querySelector('.convert-btn').addEventListener('click', e => {
+  e.preventDefault();
+  const templateData = collectFormData();
+  const ctx = JSON.stringify(templateData, null, 2);
+  const prompt = buildPrompt('PATENT_FORM', ctx, '');
+  const outDiv = document.getElementById('generatorOutput');
+  outDiv.innerText = ''; outDiv.style.display='block';
+  openStream(
+    prompt,
+    token => outDiv.innerText += token,
+    ()     => console.log('변환 완료'),
+    err    => alert('변환 오류: '+err)
+  );
+});
+
+// EX) 평가 버튼
+document.querySelector('.draft_evalbutton').addEventListener('click', () => {
+  const draft = document.getElementById('draftContent').innerText;
+  const prompt = buildPrompt('PATENT_EVALUATION', '', draft);
+  const out = document.getElementById('evaluationResult');
+  out.innerText = ''; out.style.display='block';
+  openStream(prompt, t=>out.innerText+=t, ()=>{}, e=>alert(e));
+});
+
+// EX) 추천 버튼
+document.querySelector('.draft-modifybutton').addEventListener('click', () => {
+  const draft = document.getElementById('draftContent').innerText;
+  const prompt = buildPrompt('PATENT_RECOMMENDATION', '', draft);
+  const out = document.getElementById('recommendationResult');
+  out.innerText = ''; out.style.display='block';
+  openStream(prompt, t=>out.innerText+=t, ()=>{}, e=>alert(e));
+});
+
+// EX) 수정 적용 버튼
+document.getElementById('applyModificationBtn').addEventListener('click', () => {
+  const userReq = document.getElementById('modificationRequest').value;
+  const draft   = document.getElementById('draftContent').innerText;
+  const input   = `${userReq}\n\n${draft}`;
+  const prompt  = buildPrompt('PATENT_MODIFICATION', '', input);
+  const out     = document.getElementById('modificationResult');
+  out.innerText = ''; out.style.display='block';
+  openStream(prompt, t=>out.innerText+=t, ()=>{}, e=>alert(e));
+});
+
+// ❷ EventSource 열기 (토큰 스트리밍)
+function openAssistStream(queryStr, onToken, onDone, onError) {
+  const url = `${ASSIST_STREAM_URL}?query=${queryStr}&max_new_tokens=32768`;
+  const es = new EventSource(url);
+  es.onmessage = e => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'token')        onToken(data.content);
+    else if (data.type === 'done')    { onDone(); es.close(); }
+    else if (data.type === 'error')   { onError(data.message); es.close(); }
+  };
+  es.onerror = err => {
+    onError(err);
+    es.close();
+  };
+  return es;
+}
+
 // 템플릿 관리 전용 모듈
 (function() {
   'use strict';
@@ -44,10 +374,12 @@
   // 템플릿 초기화
   function initializeTemplate() {
     const templateForm = document.getElementById('templateForm');
+    console.log('▶ initializeTemplate, form=', templateForm);
     if (!templateForm) return;
     
     // 이벤트 리스너 등록
     templateForm.addEventListener('submit', handleFormSubmit);
+    console.log('▶ submit listener registered');
     
     // 출원인 구분 이벤트
     document.querySelectorAll('input[name="applicant_type"]').forEach(radio => {
@@ -172,17 +504,47 @@
       console.log(msg);
     }
   }
-
-  // ========== 기존 기능들 (최소화) ==========
   
-  // 폼 제출
-  function handleFormSubmit(event) {
-    event.preventDefault();
-    const formData = collectFormData();
-    if (validateForm(formData)) {
-      generateDraft(formData);
+async function handleFormSubmit(event) {
+  event.preventDefault();
+  const formData = collectFormData();
+  if (!validateForm(formData)) return;
+
+  App.utils.showNotification('AI가 초안을 생성 중입니다…');
+
+  // JSON → URL 인코딩
+  const query = encodeURIComponent(JSON.stringify(formData));
+  const url   = `${fastApiUrl}?query=${query}&max_new_tokens=32768`;
+
+  const evtSource = new EventSource(url);
+
+  const draftContainer = document.getElementById('draftContent');
+  draftContainer.innerText    = '';
+  draftContainer.style.display = 'block';
+
+  evtSource.onmessage = evt => {
+    // evt.data 가 이미 JSON 문자열만 들어있습니다.
+    const data = JSON.parse(evt.data);
+    if (data.type === 'token') {
+      draftContainer.innerText += data.content;
     }
-  }
+    else if (data.type === 'done') {
+      App.utils.showNotification('AI 생성 완료.');
+      evtSource.close();
+      saveFinalDraft(draftContainer.innerText, formData);
+    }
+    else if (data.type === 'error') {
+      App.utils.showNotification('AI 생성 중 오류: ' + data.message);
+      evtSource.close();
+    }
+  };
+
+  evtSource.onerror = err => {
+    console.error('SSE 에러', err);
+    App.utils.showNotification('스트리밍 연결 오류');
+    evtSource.close();
+  };
+}
 
   // 폼 데이터 수집
   function collectFormData() {
@@ -206,40 +568,32 @@
   }
 
   // db 저장 로직 추가
-  function saveTemplates(formData) {
-    fetch('/assist/insert_patent_report/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': App.draft.getCSRFToken(),
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => {
-      if(!response.ok) {
-        throw new Error('서버 응답 오류');
-      }
-      return response.json();
-    })
-    .then(data => {
-      window.CURRENT_TEMPLATE_ID = data.template_id;
-      App.data.currentDraftId = data.draft_id;
-      App.utils.showNotification(`특허명세서로 변환 되었습니다.`);
+async function saveTemplates(formData) {
+  const res = await fetch('/assist/insert_patent_report/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': App.draft.getCSRFToken(),
+    },
+    body: JSON.stringify(formData)
+  });
+  if (!res.ok) throw new Error('저장 실패');
+  const data = await res.json();
 
-      const buttons = document.querySelectorAll(
-        '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
-      );
+  window.CURRENT_TEMPLATE_ID = data.template_id;
+  App.data.currentDraftId   = data.draft_id;
 
-      buttons.forEach(button => {
-        button.classList.add('dynamic-hover');
-        button.disabled = false;
-      });
-    })
-    .catch(error => {
-      console.error('저장 중 오류 발생:', error);
-      App.utils.showNotification('저장 중 오류가 발생했습니다.');
-    })
-  }
+  // 버튼 활성화
+  document.querySelectorAll(
+    '.draft_self_modifybutton, .draft_request_aibutton, .draft_evalbutton, .draft_downloadbutton'
+  ).forEach(btn => {
+    btn.disabled = false;
+    btn.classList.add('dynamic-hover');
+  });
+
+  return data;
+}
+
 
   function getVal(id) {
     return document.getElementById(id)?.value || '';
@@ -297,33 +651,35 @@
     return true;
   }
 
-  // Draft 생성 (다른 모듈 활용)
-  function generateDraft(formData) {
-    const content = createContent(formData);
+  // // Draft 생성 (다른 모듈 활용)
+  // function generateDraft(formData) {
+  //   //const content = createContent(formData);
+  //   formData.create_draft = content;
 
-    formData['sc_flag'] = 'create';
-    formData['version'] = 'v0';
-    formData['create_draft'] = content;
+  //   formData['sc_flag'] = 'create';
+  //   formData['version'] = 'v0';
+  //   formData['create_draft'] = content;
+  //   formData['user_id'] = currentUserInfo.id;
     
-    window.currentDraftContent = content;
-    if (App.data) App.data.currentDraftContent = content;
+  //   window.currentDraftContent = content;
+  //   if (App.data) App.data.currentDraftContent = content;
     
-    // App.draft.display 우선 사용
-    if (App.draft?.display) {
-      App.draft.display(content);
-    } else {
-      showSimpleDraft(content);
-    }
+  //   // App.draft.display 우선 사용
+  //   if (App.draft?.display) {
+  //     App.draft.display(content);
+  //   } else {
+  //     showSimpleDraft(content);
+  //   }
     
-    saveTemplates(formData);
+  //   saveTemplates(formData);
 
-    // 히스토리에 추가
-    if (App.history?.addToHistory) {
-      App.history.addToHistory(formData.tech_name);
-    }
+  //   // 히스토리에 추가
+  //   if (App.history?.addToHistory) {
+  //     App.history.addToHistory(formData.tech_name);
+  //   }
     
-    showMessage('특허 명세서 초안이 생성되었습니다.');
-  }
+  //   showMessage('특허 명세서 초안이 생성되었습니다.');
+  // }
 
   // 간단한 Draft 표시 (fallback)
   function showSimpleDraft(content) {
@@ -343,54 +699,54 @@
     }
   }
 
-  // 간단한 콘텐츠 생성
-  function createContent(data) {
-    const title = data.tech_name.trim() || '혁신적인 기술 시스템';
-    return `# 발명의 명칭
-${title}
+//   // 간단한 콘텐츠 생성
+//   function createContent(data) {
+//     const title = data.tech_name.trim() || '혁신적인 기술 시스템';
+//     return `# 발명의 명칭
+// ${title}
 
-## 기술분야
-${data.tech_description}
+// ## 기술분야
+// ${data.tech_description}
 
-## 배경기술
-${data.problem_solved}
+// ## 배경기술
+// ${data.problem_solved}
 
-## 해결하려는 과제
-${data.problem_solved}
+// ## 해결하려는 과제
+// ${data.problem_solved}
 
-## 과제의 해결 수단
-${data.tech_differentiation}
+// ## 과제의 해결 수단
+// ${data.tech_differentiation}
 
-${data.application_field ? `\n## 활용 분야\n${data.application_field}\n` : ''}
+// ${data.application_field ? `\n## 활용 분야\n${data.application_field}\n` : ''}
 
-## 발명의 효과
-본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
-- 성능 향상: 기존 기술 대비 현저히 향상된 성능 및 효율성
-- 경제성 개선: 비용 효율적인 솔루션 제공
-- 사용자 편의성: 직관적이고 사용하기 쉬운 인터페이스
+// ## 발명의 효과
+// 본 발명을 통해 다음과 같은 효과를 얻을 수 있습니다:
+// - 성능 향상: 기존 기술 대비 현저히 향상된 성능 및 효율성
+// - 경제성 개선: 비용 효율적인 솔루션 제공
+// - 사용자 편의성: 직관적이고 사용하기 쉬운 인터페이스
 
-## 발명을 실시하기 위한 구체적인 내용
+// ## 발명을 실시하기 위한 구체적인 내용
 
-### 주요 구성 요소
-${data.components_functions}
+// ### 주요 구성 요소
+// ${data.components_functions}
 
-### 구현 방식
-${data.implementation_example}
+// ### 구현 방식
+// ${data.implementation_example}
 
-${data.drawing_description ? `\n### 도면의 간단한 설명\n${data.drawing_description}\n` : ''}
+// ${data.drawing_description ? `\n### 도면의 간단한 설명\n${data.drawing_description}\n` : ''}
 
-## 특허청구범위
-**청구항 1**: ${title}에 있어서, 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
+// ## 특허청구범위
+// **청구항 1**: ${title}에 있어서, 상기 기술의 핵심 구성을 포함하여 혁신적인 기능을 제공하는 것을 특징으로 하는 시스템.
 
----
-### 출원인
-${data.applicant_info.type === 'corporation' ? 
-  `**법인명**: ${data.applicant_info.corporation_name}\n**대표자**: ${data.applicant_info.representative_name}` :
-  `**성명**: ${data.applicant_info.name}`}
+// ---
+// ### 출원인
+// ${data.applicant_info.type === 'corporation' ? 
+//   `**법인명**: ${data.applicant_info.corporation_name}\n**대표자**: ${data.applicant_info.representative_name}` :
+//   `**성명**: ${data.applicant_info.name}`}
 
-### 발명자
-${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name} **주소**: ${inv.address}`).join('\n')}`;
-  }
+// ### 발명자
+// ${data.inventors.map((inv, i) => `**발명자 ${i+1}**: ${inv.name} **주소**: ${inv.address}`).join('\n')}`;
+//   }
 
   // 출원인 구분 토글
   function toggleApplicantType() {
