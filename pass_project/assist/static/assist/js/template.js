@@ -1,6 +1,5 @@
 const ASSIST_STREAM_URL = '/assist/api/qwen/assist-stream/';
 
-  const buttons = document.querySelectorAll(
 // === 1. 프롬프트 템플릿 & 설정 ===
 
 const unifiedInferencePrompt = `
