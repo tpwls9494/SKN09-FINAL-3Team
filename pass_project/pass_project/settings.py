@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs" #os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app'
+    'core',
+    'accounts', 
+    'user_admin',
+    'assist',
 ]
 
 MIDDLEWARE = [
@@ -50,7 +53,11 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    
+    # 'accounts.middleware.EnforceAutoLogoutMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -93,6 +100,8 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+AUTH_USER_MODEL = "core.User"
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -124,10 +133,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+# 프로젝트 전체에서 정적 파일을 제공할 때 사용할 URL 접두사
+STATIC_URL = '/static/'
+
+# 개발 모드에서(=DEBUG=True) 정적 파일을 찾을 디렉터리들
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static",       # 예: pass_project/core/static
+]
+
+# 프로덕션 모드에서 수집(collectstatic)된 파일이 모일 루트 디렉터리
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # (배포 시에 사용)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTH_USER_MODEL = 'core.User'
+
+
+# 브라우저 종료 시 세션 쿠키를 자동으로 삭제하도록 전역 설정
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

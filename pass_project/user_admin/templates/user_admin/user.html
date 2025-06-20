@@ -1,0 +1,142 @@
+<!-- user_admin/templates/user_admin/user.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User 관리자 페이지</title>
+  <link rel="stylesheet" href="{% static 'user_admin/user.css' %}" />
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      {% comment %} <div class="logo"> {% endcomment %}
+      <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
+        <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
+        <span>PASS</span>
+      </div>
+      <h1>관리자 페이지</h1>
+      <div class="tab-nav">
+        <button class="tab" onclick="location.href='{% url "user_admin:group" %}'">Group</button>
+        <button class="tab active">User</button>
+      </div>
+    </div>
+
+    <main class="main-container">
+      <!-- 사용자 목록 섹션 -->
+      <section class="user-list-section">
+        <h2>사용자 목록</h2>
+        <ul class="user-list">
+        </ul>
+        <!-- 모달 오픈 버튼 -->
+        <button class="add-user" onclick="openUserCreateModal()">+ 사용자 생성</button>
+      </section>
+
+      <!-- 접속 로그 섹션 (예시 고정 데이터) -->
+      <section class="log-section">
+        <h2>사용자 접속 로그</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>상태</th>
+              <th>사용자</th>
+              <th>로그인 시간</th>
+              <th>로그아웃 시간</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in login_logs %}
+              <tr>
+                {% if not log.user_code.is_active %}
+                  <td class="status-cell">
+                    <span class="status gray"></span>
+                  </td>
+                {% elif log.logout_time is None %}
+                  <td class="status-cell">
+                    <span class="status blue"></span>
+                  </td>
+                {% else %}
+                  <td class="status-cell">
+                    <span class="status red"></span>
+                  </td>
+                {% endif %}
+
+                <td>{{ log.user_code.username }}</td>
+                <td>{{ log.login_time }}</td>
+                <td>{{ log.logout_time|default:"-" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="no-log">로그가 없습니다.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- 모달 오버레이 -->
+  <div class="modal-overlay" id="modalOverlay" onclick="openUserCreateModal()"></div>
+
+  <!-- 사용자 생성 모달 -->
+  <div id="userModal">
+    <h3>
+      👤 사용자 생성
+    </h3>
+    <hr />
+
+    <div class="user-info">
+      <div>
+        <strong>ID</strong>
+        <span id="generatedId">-</span>
+      </div>
+      <div>
+        <strong>PW</strong>
+        <span id="generatedPw">-</span>
+      </div>
+    </div>
+
+    <div id="userResult">생성 대기 중입니다.</div>
+
+    <div class="modal-buttons">
+      <button class="cancel-btn" onclick="cancelUserCreate()">취소</button>
+      <button class="confirm-btn" onclick="confirmUserCreate()">추가</button>
+    </div>
+  </div>
+
+      <!-- 모달 오버레이 (비밀번호 초기화용) -->
+    <div class="modal-overlay" id="resetOverlay" onclick="cancelReset()"></div>
+
+    <!-- 비밀번호 초기화 모달 -->
+    <div id="resetModal">
+      <h3>🔒 비밀번호 초기화</h3>
+      <hr />
+      <p>비밀번호를 초기화하시겠습니까?<br/><small>(초기 설정 비밀번호: <strong>1111</strong>)</small></p>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="cancelReset()">아니요</button>
+        <button class="confirm-btn" onclick="confirmReset()">네</button>
+      </div>
+    </div>
+
+  <!-- 정지(Deactivate) 전용 오버레이 -->
+    <div class="modal-overlay" id="deactivateOverlay" onclick="cancelDeactivate()"></div>
+    <!-- 정지(Deactivate) 전용 모달 -->
+    <div id="deactivateModal">
+      <h3>🚫 사용자 정지</h3>
+      <hr />
+      <p>“<strong id="deactivateUsernameText"></strong>” 사용자를 정지하시겠습니까?<br/>
+        <small>(정지된 사용자는 더 이상 로그인할 수 없습니다.)</small>
+      </p>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="cancelDeactivate()">아니요</button>
+        <button class="confirm-btn" onclick="confirmDeactivate()">네</button>
+      </div>
+    </div>
+
+  <!-- CSS/JS -->
+  <script src="{% static 'user_admin/user.js' %}" defer></script>
+</body>
+</html>

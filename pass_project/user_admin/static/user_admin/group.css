@@ -1,0 +1,399 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: #0d1b3d;
+  height: 100%;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;            /* 전체 화면 폭을 사용하도록 설정 */
+  max-width: none;         /* max-width 제한 제거 */
+  margin: 0 auto;
+}
+
+/* ===== 헤더 영역 ===== */
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: flex-end;
+  background-color: #0d1b3d;
+  color: white;
+  padding: 8px 40px 0 40px;
+}
+
+h1 {
+  grid-column: 2;
+  text-align: center;
+  margin: 0;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.logo img {
+  width: 80px !important;
+  height: 80px !important;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 0px;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+}
+
+/* ===== 탭 버튼 ===== */
+.tab {
+  background: #ccc;
+  border: none;
+  border-radius: 16px 16px 0 0;
+  padding: 14px 36px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #fff;
+  font-weight: bold;
+  color: #0d1b3d;
+  border-bottom: none;
+}
+
+/* ===== 본문 영역 ===== */
+.main-container {
+  display: flex;
+  flex-grow: 1;
+  gap: 24px;
+  padding: 0px 24px 24px 24px;
+  background-color: #0d1b3d;
+}
+
+/* ===== 공통 카드 스타일 ===== */
+.groupList-section,
+.log-section {
+  background-color: white;
+  border-radius: 20px;
+  padding: 12px 24px 24px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.groupList-section {
+  max-width: 400px;
+}
+
+.groupList-section h2,
+.log-section h2 {
+  font-size: 18px;
+  margin-top: 0px;
+  margin-bottom: 16px;
+  color: #0d1b3d;
+}
+
+/* ===== 사용자 목록 ===== */
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.user-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.user-list li img {
+  width: 18px;
+  height: 18px;
+  margin-left: 8px;
+}
+
+.add-user {
+  background-color: #ffb6c1;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+/* 그룹 UI */
+.group-box {
+  border: 2px solid #0c1a3e;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.group-header {
+  padding: 12px 16px;
+  background-color: white;
+  color: #0c1a3e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.group-box.expanded .group-header {
+  background-color: #0c1a3e;
+  color: white;
+}
+
+.group-user-list {
+  background-color: white;
+  padding: 12px 16px;
+  display: none;
+}
+
+.group-box.expanded .group-user-list {
+  display: block;
+}
+
+.group-user-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+
+.username {
+  flex: 1;
+}
+
+/* 모달 안 .form-group */
+#groupModal .form-group {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#groupModal .form-group label {
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #0d1b3d;
+}
+
+#groupModal .form-group input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#groupModal {
+  display: none;
+}
+
+/* 모달 오버레이 (기존에도 있었던 것 유지) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none; /* JS로 제어됨 */
+}
+
+/* 그룹 생성 모달 */
+#groupModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 32px 36px;
+  width: 500px;
+  z-index: 1000; /* modal-overlay 위 */
+  display: none; /* JS로 제어됨 */
+}
+
+/* 제목 스타일 */
+#groupModal h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 결과 메시지 */
+#groupResult {
+  font-size: 14px;
+  margin-top: 12px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 32px 36px;
+  width: 450px;
+  z-index: 1000;
+  display: none;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal .modal-body {
+  margin-bottom: 20px;
+}
+
+.modal .form-group {
+  margin-bottom: 16px;
+}
+
+.modal .form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-buttons button {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal .cancel-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.modal .confirm-btn {
+  background: #0d1b3d;
+  color: white;
+}
+
+/* group.css */
+.empty-message {
+  padding: 8px 12px;
+  font-style: italic;
+  color: #777;
+}
+
+/* 그룹 아이템 전체를 가로로 정렬 */
+.group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* 그룹 이름과 아이콘 묶음 정렬 */
+.groupname {
+  flex-grow: 1;
+  font-weight: 600;
+}
+
+/* 아이콘 그룹 정렬 */
+.group-icons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* 아이콘 버튼 공통 스타일 */
+.icon-btn {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+
+.status.red { background: #dc3545; }
+.status.gray { background: gray; }
+.status.blue { background: #007bff; }
+
+.add-group {
+  background-color: #ffb6c1;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.delete-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.user-delete-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+  cursor: pointer;
+  vertical-align: middle;
+}
