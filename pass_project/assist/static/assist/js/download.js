@@ -79,8 +79,40 @@ App.download = {
   downloadPDF() {
     if (App.data.currentDraftId) {
       // Django 백엔드 PDF 다운로드 사용
-      window.location.href = `/assist/download/pdf/${App.data.currentDraftId}/`;
-      App.utils.showNotification('📄 PDF 파일을 다운로드하고 있습니다...');
+      const html = App.utils.convertMarkdownToHTML(App.data.currentDraftContent);
+
+      fetch(`/assist/download/pdf/${App.data.currentDraftId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify({
+          html: html,
+        })
+      })
+      .then(response => {
+        if(!response) throw new Error('PDF 생성 실패');
+        return response.blob(); 
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `특허명세서_초안_${App.data.currentDraftId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        App.utils.showNotification('📄 PDF 파일이 다운로드되었습니다.');
+      })
+      .catch(error => {
+        console.error(error);
+        App.utils.showNotification('❌ PDF 다운로드 실패');
+      })
+      
+      // window.location.href = `/assist/download/pdf/${App.data.currentDraftId}/`;
+      App.utils.showNotification('📄 PDF 파일을 생성 중입니다...');
     } else {
       // 클라이언트 사이드 PDF 생성 (jsPDF 라이브러리 필요)
       this.generatePDFFromContent();
@@ -90,9 +122,40 @@ App.download = {
   // DOCX 다운로드
   downloadDOCX() {
     if (App.data.currentDraftId) {
+      const docx_html = App.utils.convertMarkdownToHTML(App.data.currentDraftContent);
+
+      fetch(`/assist/download/docx/${App.data.currentDraftId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': App.draft.getCSRFToken(),
+        },
+        body: JSON.stringify({
+          html: docx_html,
+        })
+      })
+      .then(response => {
+        if(!response) throw new Error('DOCX 생성 실패');
+        return response.blob(); 
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `특허명세서_초안_${App.data.currentDraftId}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        App.utils.showNotification('DOCX 파일을 다운로드하고 있습니다...');
+      })
+      .catch(error => {
+        console.error(error);
+        App.utils.showNotification('❌ DOCX 다운로드 실패');
+      })
       // Django 백엔드 DOCX 다운로드 사용
-      window.location.href = `/assist/download/docx/${App.data.currentDraftId}/`;
-      App.utils.showNotification('📄 DOCX 파일을 다운로드하고 있습니다...');
+      // window.location.href = `/assist/download/docx/${App.data.currentDraftId}/`;
+      App.utils.showNotification('DOCX 파일을 다운로드하고 있습니다...');
     } else {
       // 클라이언트 사이드 DOCX 생성
       this.generateDOCXFromContent();
@@ -104,7 +167,7 @@ App.download = {
     if (App.data.currentDraftId) {
       // Django 백엔드 HWP 다운로드 사용 (현재는 텍스트 파일)
       window.location.href = `/assist/download/hwp/${App.data.currentDraftId}/`;
-      App.utils.showNotification('📝 HWP 파일을 다운로드하고 있습니다... (텍스트 형식)');
+      App.utils.showNotification('HWP 파일을 다운로드하고 있습니다... (텍스트 형식)');
     } else {
       // 클라이언트 사이드 텍스트 생성
       this.generateTextFromContent();
@@ -136,7 +199,7 @@ App.download = {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    App.utils.showNotification('📄 텍스트 파일로 다운로드되었습니다. (PDF 변환 기능 준비 중)');
+    App.utils.showNotification('📄스트 파일로 다운로드되었습니다.');
   },
   
   // 클라이언트 사이드 DOCX 생성

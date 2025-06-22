@@ -6,19 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Group 관리자 페이지</title>
   <link rel="stylesheet" href="{% static 'user_admin/group.css' %}" />
+  <script src="https://kit.fontawesome.com/cd908f1713.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="wrapper">
     <div class="header">
       {% comment %} <div class="logo"> {% endcomment %}
-      <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
-        <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
-        <span>PASS</span>
-      </div>
-      <h1>관리자 페이지</h1>
-      <div class="tab-nav">
-        <button class="tab active">Group</button>
-        <button class="tab" onclick="location.href='{% url "user_admin:user" %}'">User</button>
+      <div class="logo-container">
+        <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
+          <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
+          <span>PASS</span>
+        </div>
+        <div class="group-title">
+          <h1>관리자 페이지</h1>
+        </div>
+        <div class="tab-nav">
+          <button class="tab active">Group</button>
+          <button class="tab" onclick="location.href='{% url "user_admin:user" %}'">User</button>
+        </div>
       </div>
     </div>
 
@@ -31,71 +36,82 @@
 
       <section class="log-section">
         <h2>그룹 내 사용자</h2>
-        {% for group in groups %}
-          <div class="group-box {% if forloop.first %}expanded{% endif %}">
-            <div class="group-header" onclick="toggleGroup(this)">
-              <span>{{ group.team_name }}</span>
-              <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
-            </div>
-            <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
-            {% for user in group.users %}
-              <li>
-                <span class="status 
-                  {% if not user.is_active %}
-                    gray
-                  {% elif user.is_logged_in %}
-                    blue
-                  {% else %}
-                    red
-                  {% endif %}
-                "></span>
-                <span class="username">{{ user.user_nickname|default:user.username }}</span>
-              
-                <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" 
-                    onclick="deleteUserFromGroup('{{ group.team_id }}', '{{ user.user_code }}')">
+        <div class="group-box-container">
+          {% for group in groups %}
+            <div class="group-box {% if forloop.first %}expanded{% endif %}">
+              <div class="group-header {% if "[비활성]" in group.team_name %} disabled{% endif %}"
+              {% if not "[비활성]" in group.team_name %} onclick="toggleGroup(this)" {% endif %}>
+                <span>{{ group.team_name }}</span>
+                <img class="toggle-icon" src="{% static 'user_admin/img/' %}{% if forloop.first %}up.png{% else %}down.png{% endif %}" alt="토글" />
+              </div>
+              <ul class="group-user-list" {% if not forloop.first %}style="display:none;"{% endif %}>
+              {% for user in group.users %}
+                <li>
+                  <span class="status 
+                    {% if not user.is_active %}
+                      white
+                    {% elif user.is_logged_in %}
+                      pink
+                    {% else %}
+                      gray
+                    {% endif %}
+                  "></span>
+                  <span class="username">{{ user.user_nickname|default:user.username }}</span>
+                
+                  <img src="/static/user_admin/img/delete.png" class="delete-icon" alt="삭제" 
+                      onclick="deleteUserFromGroup('{{ group.team_id }}', '{{ user.user_code }}')">
 
-              </li>
-            {% empty %}
-              <li class="empty-message">등록된 사용자가 없습니다.</li>
-            {% endfor %}
-            </ul>
-          </div>
-        {% endfor %}
+                </li>
+              {% empty %}
+                <li class="empty-message">등록된 사용자가 없습니다.</li>
+              {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
       </section>
     </main>
   </div>
 
   <div class="modal-overlay" id="modalOverlay"></div>
 
-  <!-- 사용자 생성 모달 -->
-  <div id="groupModal">
-    <h3>
-      👤 그룹 생성
-    </h3> 
-    <div class="form-group">
-      <label for="inputGroupName"><strong>그룹명</strong></label>
-      <input type="text" id="inputGroupName" placeholder="그룹명을 입력하세요" />
-    </div>
-    <div id="groupResult">그룹명을 입력하고 “추가”를 눌러주세요.</div>
-    <div class="modal-buttons">
-      <button class="cancel-btn">취소</button>
-      <button class="confirm-btn">추가</button>
+  <!-- 그룹 생성 모달 -->
+  <div id="groupModal" style="display:none;" class="modal hidden">
+    <div class="modal-whole">
+      <h3>
+        <i class="fa-solid fa-people-group"></i> 그룹 생성
+      </h3> 
+      <div class="custom-hr"></div>
+      <div id="groupResult">그룹명을 입력하고 “추가”를 눌러주세요.</div>
+      <div class="form-group">
+        <label for="inputGroupName"><strong>그룹명</strong></label>
+        <input type="text" id="inputGroupName" placeholder="그룹명을 입력하세요" />
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn">취소</button>
+        <button class="confirm-btn">추가</button>
+      </div>
     </div>
   </div>
+
   <!-- 사용자 추가 모달 -->
   <div id="addUserModal" class="modal hidden">
-    <h3>👥 그룹 사용자 추가</h3>
+    <h3><i class="fa-solid fa-user-group"></i> 그룹 사용자 추가</h3>
     <div class="modal-body">
       <div class="form-group">
-        <label><strong>그룹명</strong></label>
-        <input type="text" id="addUserGroupName" disabled />
+        <div class="group-name"><label><strong>그룹명</strong></label></div>
+        <div id="addUserGroupName"></div>
+        {% comment %} <div id="addUserGroupName"></div><input type="text" id="addUserGroupName" disabled /> {% endcomment %}
       </div>
-      <div class="form-group">
-        <label for="addUserInput"><strong>추가할 사용자 ID</strong></label>
-        <input type="text" id="addUserInput" placeholder="추가할 사용자 ID를 입력하세요." list="userOptions" />
-        <datalist id="userOptions">
-          <!-- 사용자 목록 자동완성용 옵션 -->
-        </datalist>
+      <hr/>
+      <div class="form-group add-group-user" stlye="margin-top: 20px;">
+        <div class="agu-container">
+          <label for="addUserInput"><strong>추가 ID</strong></label>
+          <input type="text" id="addUserInput" placeholder="추가할 사용자 ID를 입력하세요." list="userOptions" />
+          <datalist id="userOptions">
+            <!-- 사용자 목록 자동완성용 옵션 -->
+          </datalist>
+        </div>
       </div>
     </div>
     <div class="modal-buttons">
@@ -109,8 +125,8 @@
     <p id="deactivateConfirmText">“그룹 이름” 그룹을 정지하시겠습니까?<br><small>(정지된 그룹은 더 이상 사용할 수 없습니다.)</small></p>
     <input type="hidden" id="deactivateTargetGroupId" />
     <div class="modal-buttons">
-      <button onclick="confirmDeactivateGroup()">확인</button>
-      <button onclick="closeDeactivateUserModal()">취소</button>
+      <button class="confirm-btn" onclick="confirmDeactivateGroup()">확인</button>
+      <button class="cancel-btn" onclick="closeDeactivateUserModal()">취소</button>
     </div>
   </div>
 

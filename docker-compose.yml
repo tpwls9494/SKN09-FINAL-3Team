@@ -1,0 +1,26 @@
+services:
+  web:
+    build: .
+    container_name: django-app
+    command: gunicorn --timeout 300 --workers 1 --bind 0.0.0.0:8000 pass_project.wsgi:application
+    volumes:
+      - ./pass_project:/pass_project
+    working_dir: /pass_project
+    environment:
+      - PYTHONPATH=/pass_project
+      - DJANGO_SETTINGS_MODULE=pass_project.settings
+
+    env_file:
+      - .env
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web

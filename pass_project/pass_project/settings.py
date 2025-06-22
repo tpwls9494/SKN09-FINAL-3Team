@@ -20,17 +20,20 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 환경변수로 개발/운영 모드 구분 
+DEV = os.getenv("DJANGO_DEVELOPMENT") == "1"
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs" #os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', "^0+q*6x*zm$=cvenoh448ag5s)0m3&5dtl4-ky^^y5e%o$51fs")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True  # 운영환경용
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ['13.209.57.183', "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -45,10 +48,12 @@ INSTALLED_APPS = [
     'core',
     'accounts', 
     'user_admin',
+    'corsheaders',
     'assist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',      # CORS 미들웨어 추가 (맨 앞)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,6 +65,17 @@ MIDDLEWARE = [
 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# CORS 설정 - 운영환경용
+CORS_ALLOWED_ORIGINS = [
+    "http://13.209.57.183",  # EC2 서버 주소
+]
+
+# 기본 허용 헤더 + SSE에서 오는 text/event-stream 을 허용
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'text/event-stream',
 ]
 
 ROOT_URLCONF = 'pass_project.urls'
@@ -85,17 +101,16 @@ WSGI_APPLICATION = 'pass_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# 운영(RDS)용 DB
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'passdb',  # 데이터베이스 이름
-        'USER': 'root',        # MySQL 사용자
-        'PASSWORD': '1234', # MySQL 비밀번호
-        'HOST': '127.0.0.1',   # 로컬 호스트
-        'PORT': '3306',        # MySQL 포트
+        'NAME': 'passdb',
+        'USER': 'admin',
+        'PASSWORD': os.getenv('DB_PASSWORD', '11111111'),  # 환경변수 사용
+        'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',
+        'PORT': '3306',
     }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -149,9 +164,52 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # (배포 시에 사용)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 AUTH_USER_MODEL = 'core.User'
-
 
 # 브라우저 종료 시 세션 쿠키를 자동으로 삭제하도록 전역 설정
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# 로깅 설정
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/rag.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'assist.rag_client': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# FastAPI 서버 URL 설정
+FASTAPI_BASE_URL = os.getenv('FASTAPI_BASE_URL', "https://9kj9vbv0ckz1eu-7860.proxy.runpod.net")
+#FASTAPI_BASE_URL = os.getenv('FASTAPI_BASE_URL', "https://4gz2mlt3fj6myv-7860.proxy.runpod.net")
+
+# logs 디렉토리가 없으면 생성
+import os
+if not os.path.exists('logs'):
+    os.makedirs('logs')

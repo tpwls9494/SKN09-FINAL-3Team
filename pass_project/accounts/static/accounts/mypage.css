@@ -2,14 +2,15 @@ body {
   margin: 0;
   background: #0F1E46;
   font-family: 'Spoqa Han Sans Neo', sans-serif;
+  height: 100vh;
+  overflow-y: hidden;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: center; /* 중앙 정렬 */
-  padding: 24px 32px;
-  gap: 12px;
+  padding: 15px;
   position: relative;
   background: #0F1E46;
 }
@@ -20,19 +21,18 @@ body {
   left: 32px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  cursor: pointer;
 }
 
 .header-content .logo {
-  width: 80px !important;
-  height: 80px !important;
+  width: 50px !important;
+  height: 50px !important;
 }
 
 .logo-text {
   color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 24px;
+  font-weight: 1000;
 }
 
 .page-title {
@@ -72,11 +72,20 @@ body {
 .sidebar li {
   font-weight: bold;
   font-size: 20px;
-  color: #000;
+  color: #0F1E46;
   line-height: 3em;
 }
 .sidebar li a {
   text-decoration: none;
+}
+
+.sidebar li a:hover {
+  opacity: 0.57;
+}
+
+.sidebar li a,
+.sidebar li a:visited {
+  color: #0F1E46;
 }
 
 /* 메인 콘텐츠 */
@@ -84,10 +93,10 @@ body {
   flex: 1;
   background: #fff;
   border-radius: 24px;
-  padding: 48px 60px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
-  min-height: 500px;
+  height: 500px;
 }
 
 .panel-title {
@@ -185,7 +194,7 @@ body {
 
 /* 제목 */
 .modal-content h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -205,12 +214,19 @@ body {
   align-items: center;
   margin: 20px 0;
   gap: 20px;
+  height: 28px;
+  padding: 8px;
 }
 
 .modal-label {
   font-size: 18px;
   font-weight: 700;
   width: 120px;
+}
+
+#nicknameCheckResult {
+  font-size: 10px;
+  margin-top: 3px;
 }
 
 .modal-value {
@@ -227,29 +243,61 @@ body {
 }
 
 .modal-input input {
-  width: 260px;
-  height: 40px;
+  width: 275px;
+  height: 37px;
   border: 1px solid #5A5A5A;
   border-radius: 6px;
-  padding: 0 12px;
   font-size: 16px;
+}
+
+.modal-input input::placeholder {
+  color: #ccc;
+  font-size: 13px;
+  padding: 3px;
+  display: flex;
+  justify-content: center;
+}
+
+.modal-input input:focus {
+  border: 1px solid #5A5A5A;
+  outline: none;
+}
+
+.modal-nickname-style {
+  min-height: 1em; /* 혹은 20px 등 적절한 높이 */
+  visibility: hidden;
+}
+
+#nicknameCheckResult.show {
+  visibility: visible;
 }
 
 /* 버튼 그룹 */
 .modal-buttons {
   display: flex;
   justify-content: center;
-  gap: 40px;
-  margin-top: 32px;
+  align-items: center;
+  padding: 3px;
+  margin-top: 30px;
+  gap: 20px;
 }
 
-.modal-buttons button,
-.modal-input button {
-  height: 45px;
-  padding: 0 22px;
-  font-size: 15px;
+.modal-buttons button {
+  height: 31px;
+  width: 76px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 5px 5px rgba(0,0,0,0.25);
+}
+
+.modal-input button {
+  height: 34px;
+  width: 77px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   box-shadow: 0 5px 5px rgba(0,0,0,0.25);

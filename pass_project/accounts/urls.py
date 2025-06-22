@@ -1,14 +1,17 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 app_name = 'accounts'
 urlpatterns = [
     path('login/', views.login_view, name='login'),
+    path('logout-POST/', auth_views.LogoutView.as_view(), name='logout'),
     path('ajax-login/', views.ajax_login, name='ajax_login'),
     path('ajax-insert-login-log/', views.ajax_insert_login_log, name='ajax_insert_login_log'),
     path('get-prev-login-user/', views.get_prev_login_user, name='get_prev_login_user'),
     
     path('mypage/', views.mypage_view, name='mypage'),
+    path('select_department/', views.select_department, name='select_department'),
     path('nickname/check/', views.check_nickname, name='check_nickname'),
     path('nickname/update/', views.update_nickname, name='update_nickname'),
 

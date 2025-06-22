@@ -177,22 +177,51 @@ window.App = {
       }
       
       return englishTitle;
+    },
+    
+    // 네비게이션 아이템 활성화
+    setActiveNavItem(targetPage) {
+      const navItems = document.querySelectorAll('.nav-item');
+      
+      // 모든 네비게이션 아이템에서 active 클래스 제거
+      navItems.forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // 대상 페이지의 네비게이션 아이템에 active 클래스 추가
+      navItems.forEach(item => {
+        const text = item.textContent.trim();
+        if ((targetPage === 'assist' && text === 'AI assist') ||
+            (targetPage === 'qa' && text === 'AI Q&A')) {
+          item.classList.add('active');
+        }
+      });
     }
   },
   
   // 네비게이션 관련
   navigation: {
     switchToAssist() {
+      // 네비게이션 아이템 활성화
+      App.utils.setActiveNavItem('assist');
+      
+      // 실제 페이지 이동 - assist 앱의 기본 경로
       window.location.href = '/assist/';
     },
     
     switchToQA() {
+      // 네비게이션 아이템 활성화
+      App.utils.setActiveNavItem('qa');
+      
+      // 실제 페이지 이동 - assist 앱의 qa 경로
       window.location.href = '/assist/qa/';
     },
     
     backToNormal() {
       const fullPanel = document.getElementById('fullPanelContainer');
       const evaluationLayout = document.getElementById('evaluationLayout');
+
+      App.utils.showNotification('평가가 취소되었습니다.');
       
       if (fullPanel && evaluationLayout) {
         fullPanel.style.display = 'flex';
@@ -208,16 +237,34 @@ window.App = {
     goToMyPage() {
       App.utils.showNotification('마이페이지로 이동합니다...');
       // 실제로는 마이페이지로 리디렉션
-      // window.location.href = '/mypage';
+      window.location.href = '/accounts/mypage';
     },
-    
+
     logout() {
       if (confirm('로그아웃 하시겠습니까?')) {
-        App.utils.showNotification('로그아웃 중입니다...');
-        // 실제로는 로그아웃 처리
-        // window.location.href = '/logout';
+        fetch('/accounts/logout-POST/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }).then(res => {
+          if (res.ok) {
+            window.location.href = '/accounts/login/';
+          } else {
+            alert('로그아웃 실패');
+          }
+        });
       }
     }
+    
+    // logout() {
+    //   if (confirm('로그아웃 하시겠습니까?')) {
+    //     App.utils.showNotification('로그아웃 중입니다...');
+    //     // 실제로는 로그아웃 처리
+    //     window.location.href = '/accounts/logout/?next=/accounts/login/';
+    //   }
+    // }
   }
 };
 
@@ -231,7 +278,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Enter 키 이벤트 설정
   setupKeyEvents();
+  
+  // 초기 네비게이션 상태 설정
+  initNavigationState();
 });
+
+function getCSRFToken() {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; csrftoken=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
 function setupHeaderTrigger() {
   const hiddenHeader = document.getElementById('hiddenHeader');
@@ -276,4 +332,18 @@ function setupKeyEvents() {
       }
     }
   });
+}
+
+// 초기 네비게이션 상태 설정
+function initNavigationState() {
+  // 현재 URL이나 페이지 상태를 기반으로 초기 네비게이션 설정
+  const path = window.location.pathname;
+  if (path.includes('/assist/qa/')) {
+    App.utils.setActiveNavItem('qa');
+  } else if (path.includes('/assist/')) {
+    App.utils.setActiveNavItem('assist');
+  } else {
+    // 기본값은 assist
+    App.utils.setActiveNavItem('assist');
+  }
 }

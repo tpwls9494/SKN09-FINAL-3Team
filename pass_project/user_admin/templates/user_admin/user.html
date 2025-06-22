@@ -7,19 +7,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User 관리자 페이지</title>
   <link rel="stylesheet" href="{% static 'user_admin/user.css' %}" />
+  <script src="https://kit.fontawesome.com/cd908f1713.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="wrapper">
     <div class="header">
       {% comment %} <div class="logo"> {% endcomment %}
-      <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
-        <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
-        <span>PASS</span>
-      </div>
-      <h1>관리자 페이지</h1>
-      <div class="tab-nav">
-        <button class="tab" onclick="location.href='{% url "user_admin:group" %}'">Group</button>
-        <button class="tab active">User</button>
+      <div class="logo-container">
+        <div class="logo" onclick="location.href='/?role=admin'" style="cursor:pointer">
+          <img src="{% static 'user_admin/img/logo_white.png' %}" alt="logo" />
+          <span>PASS</span>
+        </div>
+        <div class="group-title">
+          <h1>관리자 페이지</h1>
+        </div>
+        <div class="tab-nav">
+          <button class="tab" onclick="location.href='{% url "user_admin:group" %}'">Group</button>
+          <button class="tab active">User</button>
+        </div>
       </div>
     </div>
 
@@ -27,8 +32,10 @@
       <!-- 사용자 목록 섹션 -->
       <section class="user-list-section">
         <h2>사용자 목록</h2>
-        <ul class="user-list">
-        </ul>
+        <div class="scroll-inner">
+          <ul class="user-list">
+          </ul>
+        </div>
         <!-- 모달 오픈 버튼 -->
         <button class="add-user" onclick="openUserCreateModal()">+ 사용자 생성</button>
       </section>
@@ -36,6 +43,7 @@
       <!-- 접속 로그 섹션 (예시 고정 데이터) -->
       <section class="log-section">
         <h2>사용자 접속 로그</h2>
+        <div class="scroll-inner">
         <table>
           <thead>
             <tr>
@@ -47,18 +55,26 @@
           </thead>
           <tbody>
             {% for log in login_logs %}
-              <tr>
+              <tr data-username="{{log.user_code.username}}"
+                {% if not log.user_code.is_active %}
+                  data-status="inactive"
+                {% elif log.logout_time is None %}
+                  data-status="active"
+                {% else %}
+                  data-status="logged-out"
+                {% endif %}
+              >
                 {% if not log.user_code.is_active %}
                   <td class="status-cell">
-                    <span class="status gray"></span>
+                    <span class="status white"></span>
                   </td>
                 {% elif log.logout_time is None %}
                   <td class="status-cell">
-                    <span class="status blue"></span>
+                    <span class="status pink"></span>
                   </td>
                 {% else %}
                   <td class="status-cell">
-                    <span class="status red"></span>
+                    <span class="status gray"></span>
                   </td>
                 {% endif %}
 
@@ -72,8 +88,8 @@
               </tr>
             {% endfor %}
           </tbody>
-
         </table>
+        </div>
       </section>
     </main>
   </div>
@@ -84,9 +100,10 @@
   <!-- 사용자 생성 모달 -->
   <div id="userModal">
     <h3>
-      👤 사용자 생성
+      <i class="fa-solid fa-user-plus"></i> 사용자 생성
     </h3>
     <hr />
+    <div id="userResult">생성 대기 중입니다.</div>
 
     <div class="user-info">
       <div>
@@ -98,8 +115,6 @@
         <span id="generatedPw">-</span>
       </div>
     </div>
-
-    <div id="userResult">생성 대기 중입니다.</div>
 
     <div class="modal-buttons">
       <button class="cancel-btn" onclick="cancelUserCreate()">취소</button>

@@ -1,0 +1,36 @@
+# 가상환경
+venv/
+.venv/
+
+# Python 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 운영체제 및 기타
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# 압축 파일, 아카이브
+*.zip
+*.tar
+*.tar.gz
+*.egg-info/
+*.egg
+
+# DB 및 실행 중 생성 파일
+*.sqlite3
+*.log
+
+# IDE 설정 파일
+.vscode/
+.idea/
+
+# 테스트, 산출물 등
+산출물/
+
+*.pem

@@ -88,6 +88,12 @@ $(document).ready(function () {
         .catch(() => console.error('서버 에러가 발생했습니다.'));
     });
 
+    $('#input-id, #input-pw').keydown(function (e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            $('#login-btn').click();
+        }
+    });
+
     // 모달 닫기 버튼
     $('#inactive-modal .close').click(function(){
         $('#inactive-modal').hide();

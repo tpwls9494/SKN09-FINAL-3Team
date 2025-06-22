@@ -79,8 +79,11 @@ function confirmGroupCreate() {
   return res.json();
 })
 .then(data => {
-  document.getElementById('groupResult').innerText = `생성 완료: ${data.team_name} (ID: ${data.team_id})`;
+  // document.getElementById('groupResult').innerText = `생성 완료: ${data.team_name} (ID: ${data.team_id})`;
+  alert(`생성이 완료되었습니다! ${data.team_name} (ID: ${data.team_id})`);
   loadGroupList();
+  closeAddGroupModal();
+  location.reload();
 })
 .catch(err => {
   try {
@@ -110,6 +113,7 @@ function loadGroupList() {
           <div class="group-icons">
             <img
               src="/static/user_admin/img/plus.png"
+              id="plus-user"
               class="icon-btn add-user-btn"
               title="사용자 추가"
               data-group-id="${group.team_id}"
@@ -127,8 +131,10 @@ function loadGroupList() {
         listContainer.appendChild(li);
 
         // 사용자 추가 버튼
-        li.querySelector('.add-user-btn').addEventListener('click', () => {
-          openAddUserModal(group.team_id, group.team_name);
+        li.querySelector('.add-user-btn').addEventListener('click', (event) => {
+          event.stopPropagation();
+          document.getElementById('groupModal').style.display = 'none';
+          openAddUserModal(group.team_id, group.team_name, "group-add");
         });
 
         // 그룹 정지 버튼
@@ -142,11 +148,17 @@ function loadGroupList() {
     });
 }
 
-function openAddUserModal(groupId, groupName) {
+function openAddUserModal(groupId, groupName, flag) {
   selectedTeamId = groupId; 
   document.getElementById('modalOverlay').style.display = 'block';
-  document.getElementById('addUserModal').style.display = 'block';
-  document.getElementById('addUserGroupName').value = groupName;
+  if (flag == "group-add") {
+    document.getElementById('groupModal').style.display = 'none';
+    document.getElementById('addUserModal').style.display = 'block';
+  } else {
+    document.getElementById('addUserModal').style.display = 'none';
+  }
+  
+  document.getElementById('addUserGroupName').textContent = groupName;
   document.getElementById('addUserInput').value = '';
 
   // 자동완성 사용자 목록 가져오기
@@ -161,6 +173,11 @@ function openAddUserModal(groupId, groupName) {
         dataList.appendChild(option);
       });
     });
+}
+
+function closeAddGroupModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  document.getElementById('groupModal').style.display = 'none';
 }
 
 function closeAddUserModal() {
@@ -196,6 +213,7 @@ function confirmAddUserToGroup() {
     if (data.success) {
       alert('사용자 추가 성공');
       closeAddUserModal();
+      location.reload();
     } else {
       alert('사용자 추가 실패: ' + (data.error || '알 수 없는 오류'));
     }
@@ -259,6 +277,7 @@ function deleteUserFromGroup(teamId, user_code) {
               container.appendChild(li);
             });
           });
+          location.reload();
       }
     } else {
       alert("삭제 실패: " + data.message);
@@ -352,7 +371,7 @@ document.querySelectorAll('.deactivate-btn').forEach(btn => {
 
 // js 바인딩
 document.addEventListener('DOMContentLoaded', function () {
-  const addGroupBtn = document.querySelector('.add-group');
+  const addGroupBtn = document.getElementById('create-group-btn');
   const cancelBtn = document.querySelector('.cancel-btn');
   const modalOverlay = document.getElementById('modalOverlay');
   const confirmBtn = document.querySelector('.confirm-btn');
@@ -373,9 +392,3 @@ document.addEventListener('DOMContentLoaded', function () {
     confirmBtn.addEventListener('click', confirmGroupCreate);
   }
 });
-
-// 그룹에 사용자 추가 모달
-
-// 그룹 삭제 모달
-
-// 취소 모달
