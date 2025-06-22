@@ -1,3 +1,4 @@
+
 import requests
 import json
 from django.conf import settings
@@ -6,6 +7,7 @@ import logging
 import time
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
 
 class AssistClient:
     def __init__(self):

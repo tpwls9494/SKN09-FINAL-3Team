@@ -1,0 +1,19 @@
+# ─ Git 리포지터리
+.git
+.gitignore
+
+# ─ 가상환경, 캐시, DB, 로그
+venv/
+__pycache__/
+*.pyc
+*.sqlite3
+logs/
+data/
+data_api/
+data_preprocessing/
+finetuning/
+vectordb/
+
+# ─ OS/IDE 메타파일
+.DS_Store
+Thumbs.db

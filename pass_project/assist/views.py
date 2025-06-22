@@ -44,6 +44,68 @@ def ai_generate_draft(template_data):
     prompt = f"다음 템플릿을 보고 초안을 작성해줘:\n\n{json.dumps(template_data)}"
     return assist_client.generate_assist_answer(prompt, max_new_tokens=4096)
 
+
+def ai_edit(draft_text, prompt):
+    # prompt + draft_text 를 합친 뒤 Assist 모델로 보내는 예시
+    full_prompt = f"{prompt}\n\n{draft_text}"
+    return assist_client.generate_assist_answer(full_prompt)
+
+def ai_evaluate(draft_text):
+    # 평가를 위한 프롬프트 템플릿
+    eval_prompt = f"이 초안을 평가해줘:\n\n{draft_text}"
+    return assist_client.generate_assist_answer(eval_prompt)
+
+def ai_generate_draft(template_data):
+    # 지금 쓰던 mock_ai_generate_draft 대신
+    # template_data 를 JSON 직렬화해서 Assist 모델에 넘길 수도 있고
+    # 또는 미리 만든 마크다운 뼈대(prompt)를 넘기면 됩니다.
+    prompt = f"다음 템플릿을 보고 초안을 작성해줘:\n\n{json.dumps(template_data)}"
+    return assist_client.generate_assist_answer(prompt, max_new_tokens=4096)
+
+# — ai_edit —
+@csrf_exempt
+@require_POST
+def assist_edit(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    prompt     = data.get("prompt", "")
+    if not draft_text or not prompt:
+        return JsonResponse({"success": False, "message": "draft_text와 prompt가 필요합니다."}, status=400)
+    try:
+        edited = ai_edit(draft_text, prompt)
+        return JsonResponse({"success": True, "result": edited})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_evaluate —
+@csrf_exempt
+@require_POST
+def assist_evaluate(request):
+    data = json.loads(request.body)
+    draft_text = data.get("draft_text", "")
+    if not draft_text:
+        return JsonResponse({"success": False, "message": "draft_text가 필요합니다."}, status=400)
+    try:
+        evaluation = ai_evaluate(draft_text)
+        return JsonResponse({"success": True, "result": evaluation})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+# — ai_generate_draft —
+@csrf_exempt
+@require_POST
+def assist_generate(request):
+    data = json.loads(request.body)
+    template_data = data.get("template_data")
+    if not template_data:
+        return JsonResponse({"success": False, "message": "template_data가 필요합니다."}, status=400)
+    try:
+        draft_md = ai_generate_draft(template_data)
+        return JsonResponse({"success": True, "result": draft_md})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+
 # Mock AI 함수 (FastAPI로 교체 예정)
 def mock_ai_edit(draft_text, prompt):
     return f"[Edited by AI based on: '{prompt}']\n\n{draft_text}"
@@ -131,129 +193,6 @@ def mock_ai_generate_draft(template_data):
 
 def editor_view(request):
     return render(request, 'assist/editor.html')
-    # if request.method == 'POST':
-    #     # 템플릿 → 초안 생성 (AJAX 요청 처리)
-    #     if request.headers.get('Content-Type') == 'application/json':
-    #         try:
-    #             data = json.loads(request.body)
-                
-    #             # Template 저장
-    #             template = Template(
-    #                 user_code=request.user if request.user.is_authenticated else None,
-    #                 tech_name=data.get('tech_name', ''),
-    #                 tech_description=data.get('tech_description', ''),
-    #                 problem_solved=data.get('problem_solved', ''),
-    #                 tech_differentiation=data.get('tech_differentiation', ''),
-    #                 application_field=data.get('application_field', ''),
-    #                 components_functions=data.get('components_functions', ''),
-    #                 implementation_example=data.get('implementation_example', ''),
-    #                 drawing_description=data.get('drawing_description', ''),
-    #                 application_info=data.get('applicant_name', '') + ', ' + 
-    #                                data.get('applicant_nationality', '') + ', ' + 
-    #                                data.get('applicant_address', ''),
-    #                 inventor_info=data.get('inventor_name', '') + ', ' + 
-    #                             data.get('inventor_nationality', '') + ', ' + 
-    #                             data.get('inventor_address', ''),
-    #                 template_title=data.get('tech_name', '')[:50],
-    #                 date=timezone.now()
-    #             )
-    #             template.save()
-
-    #             # AI로 초안 생성
-    #             draft_content = mock_ai_generate_draft(data)
-                
-    #             # Draft 저장
-    #             draft = Draft.objects.create(
-    #                 template_id=template,
-    #                 draft_name=f"{template.tech_name}_draft",
-    #                 create_draft=draft_content,
-    #                 create_time=timezone.now()
-    #             )
-                
-    #             return JsonResponse({
-    #                 'success': True,
-    #                 'draft_content': draft_content,
-    #                 'draft_id': draft.draft_id,
-    #                 'message': '특허 초안이 성공적으로 생성되었습니다.'
-    #             })
-                
-    #         except Exception as e:
-    #             return JsonResponse({
-    #                 'success': False,
-    #                 'error': str(e),
-    #                 'message': '초안 생성 중 오류가 발생했습니다.'
-    #             })
-        
-    #     # 기존 폼 처리 (하위 호환성)
-    #     elif 'submit_template' in request.POST:
-    #         form = TemplateForm(request.POST)
-    #         if form.is_valid():
-    #             template = form.save(commit=False)
-    #             if request.user.is_authenticated:
-    #                 template.user_code = request.user
-    #             template.date = timezone.now()
-    #             template.save()
-
-    #             # 기존 로직으로 초안 생성
-    #             template_data = {
-    #                 'tech_name': template.tech_name,
-    #                 'tech_description': template.tech_description,
-    #                 'problem_solved': template.problem_solved,
-    #                 'tech_differentiation': template.tech_differentiation,
-    #                 'application_field': template.application_field,
-    #                 'components_functions': template.components_functions,
-    #                 'implementation_example': template.implementation_example,
-    #                 'drawing_description': template.drawing_description,
-    #                 'application_info': template.application_info,
-    #                 'inventor_info': template.inventor_info,
-    #             }
-                
-    #             draft_content = mock_ai_generate_draft(template_data)
-                
-    #             draft = Draft.objects.create(
-    #                 template_id=template,
-    #                 draft_name=f"{template.tech_name}_draft",
-    #                 create_draft=draft_content,
-    #                 create_time=timezone.now()
-    #             )
-    #             return redirect('assist:editor')
-
-    #     # 직접 수정 저장
-    #     elif 'save_draft' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         new_text = request.POST.get('draft_text')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         draft.create_draft = new_text
-    #         draft.save()
-
-    #     # AI 수정
-    #     elif 'ai_edit' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         prompt = request.POST.get('prompt')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         draft.create_draft = mock_ai_edit(draft.create_draft, prompt)
-    #         draft.save()
-
-    #     # AI 평가
-    #     elif 'ai_evaluate' in request.POST:
-    #         draft_id = request.POST.get('draft_id')
-    #         draft = Draft.objects.get(draft_id=draft_id)
-    #         request.session['ai_feedback'] = mock_ai_evaluate(draft.create_draft)
-    #         request.session['active_draft'] = draft.draft_id
-
-    #     return redirect('assist:editor')
-
-    # # GET 요청 처리
-    # template = Template.objects.last()
-    # draft = Draft.objects.last()
-    # feedback = request.session.pop('ai_feedback', None) if draft else None
-    
-    # return render(request, 'assist/editor.html', {
-    #     'form': TemplateForm(),
-    #     'template': template,
-    #     'draft': draft,
-    #     'feedback': feedback
-    # })
 
 @csrf_exempt
 def insert_patent_report(request):
@@ -800,7 +739,6 @@ def download_hwp(request, draft_id):
    
 # views.py의 QA 관련 부분 (최종 버전)
 
-
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------
@@ -1132,8 +1070,6 @@ def rag_status(request):
         }, status=500)
 
 # assistAdd commentMore actions
-
-
 logger = logging.getLogger(__name__)
 
 @csrf_exempt

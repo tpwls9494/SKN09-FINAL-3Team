@@ -34,6 +34,7 @@
   window.App.qa = {
 
     isProcessing: false,
+
     /* 초기화 */
     init() {
       this.resetLayout();

@@ -20,6 +20,8 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 환경변수로 개발/운영 모드 구분 
+DEV = os.getenv("DJANGO_DEVELOPMENT") == "1"
 
 
 # Quick-start development settings - unsuitable for production
@@ -46,7 +48,7 @@ INSTALLED_APPS = [
     'core',
     'accounts', 
     'user_admin',
-    'corsheaders',  # CORS 추가
+    'corsheaders',
     'assist',
 ]
 
@@ -109,8 +111,6 @@ DATABASES = {
         'HOST': 'pass-rds.cvkkgukwexvu.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
     }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
