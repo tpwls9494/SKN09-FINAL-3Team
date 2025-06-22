@@ -32,6 +32,9 @@
   
   // Q&A 기능 정의
   window.App.qa = {
+
+    isProcessing: false,
+
     /* 초기화 */
     init() {
       this.resetLayout();

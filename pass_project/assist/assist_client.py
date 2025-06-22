@@ -1,4 +1,4 @@
-# assist/rag_client.py
+
 import requests
 import json
 from django.conf import settings
@@ -8,7 +8,6 @@ import time
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-logger = logging.getLogger(__name__)
 
 class AssistClient:
     def __init__(self):

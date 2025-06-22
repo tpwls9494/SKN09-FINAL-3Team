@@ -16,7 +16,7 @@ class RAGClient:
         base_url = getattr(
             settings,
             'RAG_SERVER_URL',
-            'https://4gz2mlt3fj6myv-7860.proxy.runpod.net'
+            'https://9kj9vbv0ckz1eu-7860.proxy.runpod.net'
         )
         # HTTP를 HTTPS로 강제 변환
         if base_url.startswith('http://'):
